@@ -47,8 +47,14 @@ async function init() {
     need("[data-bot-label]"),
     reducedMotion,
   );
-  const cta = need<HTMLElement>("[data-cta]");
-  const bot = new StudioBot(wm, cursor, { reducedMotion, finePointer, cta });
+  const bot = new StudioBot(wm, cursor, {
+    reducedMotion,
+    finePointer,
+    ctas: [
+      { el: need<HTMLElement>("[data-cta]"), say: "free demo" },
+      { el: need<HTMLElement>("[data-contact]"), say: "friendly humans" },
+    ],
+  });
   const sound = new Sound();
   const caption = need<HTMLElement>("[data-caption]");
   const found = new Set<string>();
@@ -76,7 +82,7 @@ async function init() {
         // The caption's text changes as words are found; reserve room for the longest line.
         widen(textRect("[data-caption]"), 520),
         textRect(".lede"),
-        need("[data-cta]").getBoundingClientRect(),
+        need("[data-actions]").getBoundingClientRect(),
         textRect(".foot"),
       ];
     },
@@ -103,7 +109,7 @@ async function init() {
       caption.textContent = "Back in place.";
       return;
     }
-    const hit = findHiddenWord(word);
+    const hit = findHiddenWord(word, found);
     if (!hit) return;
     const isNew = !found.has(hit);
     if (isNew) {
@@ -215,11 +221,10 @@ async function init() {
       },
     },
     {
-      name: "solve",
+      name: "tidy",
       hint: "put the tiles back",
       run: () => {
-        if (bot.done)
-          return ["It's already solved. Press Reset to play again."];
+        if (bot.done) return ["It's already tidy. Press Reset to play again."];
         bot.tidy();
         return { close: true };
       },
@@ -235,6 +240,16 @@ async function init() {
           : [
               `None yet. ${HIDDEN_WORDS.length} words are hidden in the tiles. Rearrange them to find one.`,
             ],
+    },
+    {
+      name: "next",
+      hint: "a word you haven't found yet",
+      run: () => {
+        const next = HIDDEN_WORDS.find((w) => !found.has(w));
+        return next
+          ? [`Try spelling “${next}”.`]
+          : [`You've found all ${HIDDEN_WORDS.length} words.`];
+      },
     },
     {
       name: "sound",

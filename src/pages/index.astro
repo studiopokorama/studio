@@ -9,7 +9,7 @@ import "../styles/global.css";
 import Mark from "../components/Mark.astro";
 import Palette from "../components/Palette.astro";
 import Wordmark from "../components/Wordmark.astro";
-import { CONTACT_EMAIL } from "../config";
+import { CONTACT_EMAIL, GAME_URL } from "../config";
 
 const title = "Studio Pokorama";
 const description =
@@ -61,9 +61,18 @@ const ogImage = new URL("/og.png", Astro.site).href;
         <a class="home" href="/" aria-label="Studio Pokorama home">
           <Mark size={44} />
         </a>
-        <a class="btn btn-primary" data-cta href={`mailto:${CONTACT_EMAIL}`}>
-          Say hello
-        </a>
+        <nav class="top-actions" data-actions aria-label="Main">
+          <a
+            class="btn btn-secondary"
+            data-contact
+            href={`mailto:${CONTACT_EMAIL}`}
+          >
+            Contact us
+          </a>
+          <a class="btn btn-primary" data-cta href={GAME_URL}>
+            Play Interior Design Game
+          </a>
+        </nav>
       </header>
 
       <main class="hero">
@@ -97,7 +106,7 @@ const ogImage = new URL("/og.png", Astro.site).href;
         <path d="M8 0 16 18H0Z"></path>
       </svg>
       <span class="bot-label" data-bot-label>
-        studio
+        go for it
       </span>
     </div>
 

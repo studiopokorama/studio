@@ -21,18 +21,23 @@ export class AbortedError extends Error {
 
 export const isAborted = (e: unknown) => e instanceof AbortedError;
 
-/** The lime "studio" cursor: a second pair of hands on the page. */
+/** The studio's lime cursor: a second pair of hands on the page. */
 export class BotCursor {
   pos: Pt = { x: -100, y: -100 };
   private pin: (() => Pt) | null = null;
   private seed = Math.random() * 100;
   private sayTimer = 0;
+  /** What the label reads when the cursor isn't saying anything else. */
+  private idleLabel: string;
+  private readonly defaultIdleLabel: string;
 
   constructor(
     private el: HTMLElement,
     private label: HTMLElement,
     private reducedMotion: boolean,
-  ) {}
+  ) {
+    this.idleLabel = this.defaultIdleLabel = label.textContent?.trim() ?? "";
+  }
 
   show() {
     this.el.classList.add("is-visible");
@@ -51,6 +56,15 @@ export class BotCursor {
     this.render(this.pos);
   }
 
+  /** How far the label reaches right of and below the tip (px), sized for its longest phrase. */
+  labelExtent(): { right: number; bottom: number } {
+    const scale = Number(this.el.style.getPropertyValue("--cursor-scale")) || 1;
+    return {
+      right: 10 * scale + Math.max(this.label.offsetWidth, 130),
+      bottom: 20 * scale + Math.max(this.label.offsetHeight, 20),
+    };
+  }
+
   setAway(away: boolean) {
     this.el.classList.toggle("is-away", away);
   }
@@ -59,10 +73,21 @@ export class BotCursor {
     clearTimeout(this.sayTimer);
     this.label.textContent = text;
     this.el.classList.add("is-talking");
-    this.sayTimer = window.setTimeout(() => {
-      this.el.classList.remove("is-talking");
-      this.label.textContent = "studio";
-    }, ms);
+    this.sayTimer = window.setTimeout(() => this.hush(), ms);
+  }
+
+  /** Change the resting label text; no argument restores the one from the page. */
+  setIdleLabel(text = this.defaultIdleLabel) {
+    this.idleLabel = text;
+    if (!this.el.classList.contains("is-talking"))
+      this.label.textContent = text;
+  }
+
+  /** Stop talking now: back to the idle label (hidden unless the cursor is away). */
+  hush() {
+    clearTimeout(this.sayTimer);
+    this.el.classList.remove("is-talking");
+    this.label.textContent = this.idleLabel;
   }
 
   setScale(s: number) {

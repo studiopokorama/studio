@@ -24,11 +24,18 @@ export const HIDDEN_WORDS = [
   "room",
 ] as const;
 
-/** Longest hidden word appearing as a contiguous run in `row`, or null. */
-export function findHiddenWord(row: string): string | null {
+/**
+ * Hidden word appearing as a contiguous run in `row`, or null. Words not yet `found` always win
+ * (a row can hold two, e.g. "pramok" has pram and amok); among equals the longest wins.
+ */
+export function findHiddenWord(
+  row: string,
+  found: ReadonlySet<string> = new Set(),
+): string | null {
   let best: string | null = null;
+  const rank = (w: string) => (found.has(w) ? 0 : 100) + w.length;
   for (const w of HIDDEN_WORDS) {
-    if (row.includes(w) && (!best || w.length > best.length)) best = w;
+    if (row.includes(w) && (!best || rank(w) > rank(best))) best = w;
   }
   return best;
 }

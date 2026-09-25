@@ -52,7 +52,8 @@ export class StudioBot {
     private opts: {
       reducedMotion: boolean;
       finePointer: boolean;
-      cta: HTMLElement | null;
+      /** Buttons the cursor points at when hovered, with what it says there. */
+      ctas: { el: HTMLElement; say: string }[];
     },
   ) {
     wm.on((e) => {
@@ -65,10 +66,11 @@ export class StudioBot {
         this.onVisitorDrop(e.word);
       }
     });
-    const cta = opts.cta;
-    if (cta && opts.finePointer && !opts.reducedMotion) {
-      cta.addEventListener("pointerenter", () => this.onCta(true));
-      cta.addEventListener("pointerleave", () => this.onCta(false));
+    if (opts.finePointer && !opts.reducedMotion) {
+      for (const cta of opts.ctas) {
+        cta.el.addEventListener("pointerenter", () => this.onCta(cta));
+        cta.el.addEventListener("pointerleave", () => this.onCta(null));
+      }
     }
   }
 
@@ -112,7 +114,7 @@ export class StudioBot {
   /**
    * Every word found. `leadIn` runs first (the replay), then the bot puts the word together and
    * drops the violet tile into its slot so the logo is whole (`celebrate` runs then), and from then
-   * on admires it until reset. Scramble, solve and tidy are refused from the moment this is called.
+   * on admires it until reset. Scramble and tidy are refused from the moment this is called.
    */
   finale(leadIn: () => Promise<void>, celebrate: () => Promise<void>) {
     // Called from the visitor's own drop, so nothing can be held; if it is, the state is broken.
@@ -147,6 +149,7 @@ export class StudioBot {
         this.wm.release("bot");
       }
       this.cursor.say("done", 2600);
+      this.cursor.setIdleLabel("thanks for playing");
       await celebrate();
       await wait(1600, signal);
       await this.admire(signal);
@@ -156,6 +159,7 @@ export class StudioBot {
   /** Back to the beginning: lift the violet tile out again and carry on as usual. */
   reset() {
     this.completed = false;
+    this.cursor.setIdleLabel();
     this.clear("tidy", "offer");
     this.run((signal) => this.liftToRest(signal));
   }
@@ -196,21 +200,29 @@ export class StudioBot {
     }
   }
 
-  private onCta(entered: boolean) {
-    if (this.visitorHolding() || (this.mode === "busy" && entered)) return;
-    const cta = this.opts.cta!;
-    if (entered) {
+  /** Hovering a button: point at it (`null` = the pointer left a button). */
+  private onCta(cta: { el: HTMLElement; say: string } | null) {
+    if (this.visitorHolding()) return;
+    const pointing = this.taskName === "cta";
+    if (cta) {
+      this.clear("cta-leave");
+      // Busy with real work (tidying, the finale): don't drop it for a hover.
+      if (this.mode === "busy" && !pointing) return;
       this.run(async (signal) => {
-        const r = cta.getBoundingClientRect();
+        const r = cta.el.getBoundingClientRect();
         this.cursor.setAway(true);
         await this.cursor.moveTo(
-          { x: r.left + r.width * 0.28, y: r.bottom + 6 },
+          this.clampToView({ x: r.left + r.width * 0.28, y: r.bottom + 6 }),
           { signal, width: r.width },
         );
-        this.cursor.say("this one", 6000);
+        this.cursor.say(cta.say, 6000);
       }, "cta");
-    } else if (this.taskName === "cta") {
-      this.run((signal) => this.returnHome(signal));
+    } else if (pointing) {
+      // A short grace period, so moving straight onto the next button keeps pointing.
+      this.schedule("cta-leave", 150, () => {
+        if (this.taskName === "cta")
+          this.run((signal) => this.returnHome(signal));
+      });
     }
   }
 
@@ -328,6 +340,7 @@ export class StudioBot {
     if (id === null || !this.wm.isResting()) return;
     this.mode = "home";
     this.cursor.setAway(false);
+    this.cursor.hush(); // back on the logo: no label, whatever was said on the way
     this.cursor.pinTo(() => this.wm.cursorOnTile(id));
   }
 
@@ -446,11 +459,13 @@ export class StudioBot {
     return h === "user" || h === "key";
   }
 
+  /** Keep the cursor, and the label hanging below-right of it, fully on screen. */
   private clampToView(p: Pt): Pt {
-    const m = 24;
+    const m = 16;
+    const label = this.cursor.labelExtent();
     return {
-      x: Math.min(innerWidth - m, Math.max(m, p.x)),
-      y: Math.min(innerHeight - m, Math.max(m, p.y)),
+      x: Math.min(innerWidth - m - label.right, Math.max(m, p.x)),
+      y: Math.min(innerHeight - m - label.bottom, Math.max(m, p.y)),
     };
   }
 

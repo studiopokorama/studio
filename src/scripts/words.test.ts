@@ -50,6 +50,15 @@ describe("hidden words", () => {
     expect(findHiddenWord("oakpromo")).toBe("promo");
     expect(findHiddenWord("pokorama")).toBe(null);
   });
+
+  it("prefers a word not found yet over one already found", () => {
+    // "pramokoa" holds both pram and amok (same length).
+    expect(findHiddenWord("pramokoa", new Set(["amok"]))).toBe("pram");
+    expect(findHiddenWord("pramokoa", new Set(["pram"]))).toBe("amok");
+    // A shorter new word beats a longer found one: "parkaoom" holds parka and park.
+    expect(findHiddenWord("parkaoom")).toBe("parka");
+    expect(findHiddenWord("parkaoom", new Set(["parka"]))).toBe("park");
+  });
 });
 
 describe("applyMove", () => {
