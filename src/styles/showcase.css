@@ -1,0 +1,693 @@
+/* ─── project tiles on the board ───────────────────────────── */
+
+.js .showcase {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+html:not(.js) .showcase {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 40px;
+}
+
+/* The tile is the slot it sits in; the card is the piece that lifts out of it. */
+.pt {
+  display: block;
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-slot-fill);
+  box-shadow: var(--sp-slot-border);
+  color: var(--sp-text);
+  text-decoration: none;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+.js .showcase .pt {
+  position: absolute;
+}
+.js .showcase:not(.is-ready) .pt,
+.js .showcase .pt:not(.is-placed) {
+  visibility: hidden;
+}
+html:not(.js) .showcase .pt {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+
+/* Two layers so the motions never fight: the card lifts (a CSS transition, once per hover),
+   the face inside it tilts toward the pointer (smoothed per frame in JS). */
+.pt-card {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  will-change: transform;
+  transition:
+    transform 240ms var(--sp-ease-out),
+    opacity 120ms linear;
+}
+/* The lifted shadow fades in as a layer: animating box-shadow itself repaints the blur every frame. */
+.pt-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--sp-drag-shadow);
+  opacity: 0;
+  transition: opacity 240ms var(--sp-ease-out);
+}
+.pt:hover .pt-card,
+.pt:focus-visible .pt-card {
+  transform: translate(4px, -8px) rotate(1.5deg);
+}
+.pt:hover .pt-card::before,
+.pt:focus-visible .pt-card::before {
+  opacity: 1;
+}
+.pt:active .pt-card {
+  transform: translate(2px, -3px) rotate(0.6deg);
+  transition-duration: 80ms;
+}
+/* Open: the piece is out of the board, and its empty slot shows. */
+.pt.is-open .pt-card,
+.pt-card.is-covered {
+  opacity: 0;
+  transition: none;
+}
+.pt.is-dropping .pt-card {
+  animation: pt-drop 520ms var(--sp-ease-back) var(--drop-delay, 0ms) both;
+}
+@keyframes pt-drop {
+  from {
+    opacity: 0;
+    transform: translate(10px, -34px) rotate(5deg) scale(1.04);
+  }
+}
+
+.pt-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--sp-surface);
+  /* Always 3D, even untilted: switching a layer from 2D to 3D on hover forces a re-raster. */
+  transform: perspective(700px) rotateX(0deg) rotateY(0deg);
+  will-change: transform;
+}
+/* Resting dim: an overlay that fades out on hover (cheaper than animating a filter on the images). */
+.pt-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(18 17 21 / 0.28);
+  transition: opacity 240ms var(--sp-ease-out);
+}
+.pt:hover .pt-face::after,
+.pt:focus-visible .pt-face::after {
+  opacity: 0;
+}
+
+.pt-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 400ms var(--sp-ease-out);
+}
+.pt-img + .pt-img,
+.pt-card.is-cycling .pt-img:not(.is-shown) {
+  opacity: 0;
+}
+.pt-card.is-cycling .pt-img.is-shown {
+  opacity: 1;
+}
+
+.pt-label {
+  position: absolute;
+  z-index: 1;
+  left: 8px;
+  bottom: 8px;
+  max-width: calc(100% - 16px);
+  padding: 6px 10px 7px;
+  border-radius: var(--sp-radius-sm);
+  /* Solid, no backdrop blur: inside the tilting face it would be re-blurred every frame. */
+  background: rgb(18 17 21 / 0.85);
+}
+.pt-title {
+  display: block;
+  overflow: hidden;
+  font: 800 16px/1 var(--sp-font-display);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pt-year {
+  position: absolute;
+  z-index: 1;
+  top: 8px;
+  right: 8px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  background: rgb(18 17 21 / 0.85);
+  color: var(--sp-text-muted);
+  font: 400 11px/1 var(--sp-font-mono);
+  letter-spacing: 0.04em;
+}
+.pt-tags {
+  display: block;
+  margin-top: 6px;
+  overflow: hidden;
+  color: var(--sp-text-muted);
+  font: 600 12px/1.2 var(--sp-font-body);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.pt.is-small .pt-label {
+  left: 6px;
+  bottom: 6px;
+  max-width: calc(100% - 12px);
+  padding: 5px 8px 6px;
+}
+.pt.is-small .pt-title {
+  font-size: 12px;
+}
+
+/* ─── "All projects" button: the studio mark ─────────────── */
+
+.apps-btn {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sp-radius-md);
+  background: none;
+  cursor: pointer;
+  transition:
+    transform 200ms var(--sp-ease-back),
+    filter 200ms var(--sp-ease-out);
+}
+.apps-btn:hover {
+  transform: translateY(-4px) rotate(-4deg);
+  filter: drop-shadow(0 10px 12px rgb(0 0 0 / 0.45));
+}
+.apps-btn:active {
+  transform: translateY(-1px) rotate(-1deg);
+  transition-duration: 80ms;
+}
+html:not(.js) .apps-btn {
+  display: none;
+}
+
+/* ─── launcher ─────────────────────────────────────────────── */
+
+/* The sheet is a patch of the board: the same slots, with every project sitting in one. */
+.launcher {
+  /* Set from JS (fitGrid) so the grid fills the viewport without scrolling. */
+  --cols: 2;
+  --cell: 160px;
+  position: fixed;
+  inset: auto 0 calc(100px + env(safe-area-inset-bottom)) 0;
+  width: fit-content;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100svh - 116px - env(safe-area-inset-bottom));
+  margin: 0 auto;
+  padding: 16px 20px 22px;
+  border: 0;
+  border-radius: var(--sp-radius-lg);
+  background: var(--sp-bg);
+  color: var(--sp-text);
+  box-shadow:
+    inset 0 0 0 1px var(--sp-line),
+    0 30px 80px rgb(0 0 0 / 0.7);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  transform-origin: 50% 100%;
+}
+.launcher.is-scroll {
+  overflow-y: auto;
+}
+.launcher[open] {
+  animation: launcher-in 260ms var(--sp-ease-out);
+}
+.launcher.is-closing {
+  animation: launcher-out 180ms var(--sp-ease-out) forwards;
+}
+.launcher::backdrop {
+  background: rgb(18 17 21 / 0.6);
+}
+@keyframes launcher-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+}
+@keyframes launcher-out {
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+}
+
+.launcher-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+/* Set like the wordmark's caption. */
+.launcher-title {
+  margin: 0;
+  font: 400 12px/1.5 var(--sp-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sp-text-faint);
+}
+.launcher-close,
+.po-close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-surface);
+  color: var(--sp-text);
+  cursor: pointer;
+  transition:
+    transform 180ms var(--sp-ease-out),
+    background-color 180ms var(--sp-ease-out);
+}
+.launcher-close:hover,
+.po-close:hover {
+  background: #322f39;
+  transform: rotate(-4deg);
+}
+.launcher-close path,
+.po-close path,
+.po-step path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.launcher-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* Launcher tiles are the board's tiles, in a grid: square, sitting in their slots. */
+.launcher .pt {
+  position: relative;
+  aspect-ratio: 1;
+  container-type: inline-size;
+}
+/* Big launcher tiles: a bigger label, set in proportion. */
+@container (min-width: 240px) {
+  .pt-label {
+    left: 12px;
+    bottom: 12px;
+    max-width: calc(100% - 24px);
+    padding: 9px 12px 10px;
+  }
+  .pt-title {
+    font-size: 21px;
+  }
+  .pt-year {
+    top: 12px;
+    right: 12px;
+  }
+}
+.launcher[open] .pt-card {
+  animation: pt-drop 520ms var(--sp-ease-back) calc(90ms + var(--i) * 60ms) both;
+}
+
+/* ─── project overlay ──────────────────────────────────────── */
+
+.po {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--sp-text);
+  overflow: hidden;
+}
+/* Server-rendered open (a /work/ page before the script runs, or without JS): not modal, no backdrop. */
+.po[open]:not(:modal) {
+  z-index: 30;
+  background: var(--sp-bg);
+}
+/* No backdrop blur: over the WebGL board it costs whole frames, right when the cover flies in. */
+.po::backdrop {
+  background: rgb(18 17 21 / 0.97);
+  transition: opacity 260ms var(--sp-ease-out);
+}
+.po[open]::backdrop {
+  animation: po-fade 320ms var(--sp-ease-out);
+}
+.po.is-leaving::backdrop {
+  opacity: 0;
+}
+@keyframes po-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.po-frame {
+  --gutter: clamp(16px, 5vw, 64px);
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 0 var(--gutter);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: opacity 200ms var(--sp-ease-out);
+}
+.po.is-leaving .po-frame {
+  opacity: 0;
+}
+.po-frame:focus {
+  outline: none;
+}
+
+.po-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0;
+}
+.po-all,
+.po-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--sp-radius-md);
+  background: transparent;
+  color: var(--sp-text-muted);
+  font: 600 14px/1 var(--sp-font-body);
+  text-decoration: none;
+  cursor: pointer;
+}
+.po-all {
+  margin-left: -12px;
+}
+.po-all:hover,
+.po-step:hover {
+  background: var(--sp-surface-deep);
+  color: var(--sp-text);
+}
+html:not(.js) .po-all,
+html:not(.js) .pv-thumbs {
+  display: none;
+}
+.po-close {
+  margin-left: auto;
+}
+
+.po-body {
+  align-self: center;
+  transition:
+    opacity 160ms var(--sp-ease-out),
+    transform 160ms var(--sp-ease-out);
+}
+.po-body.is-switching {
+  opacity: 0;
+  transform: translateX(calc(var(--dir, 0) * -24px));
+}
+
+.po-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 0;
+}
+.po-nav[hidden] {
+  display: none;
+}
+.po-step {
+  margin: 0 -12px;
+}
+
+.po-fly {
+  position: fixed;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+  box-shadow: 0 24px 50px rgb(0 0 0 / 0.5);
+}
+.po-fly img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ─── project view ─────────────────────────────────────────── */
+
+.pv {
+  display: grid;
+  gap: 28px 56px;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+@media (min-width: 960px) {
+  .pv {
+    grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+    align-items: center;
+  }
+}
+
+.pv-stage {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: var(--sp-radius-lg);
+  background: var(--sp-surface-deep);
+  box-shadow: inset 0 0 0 1px var(--sp-line);
+}
+.pv-stage.is-covered {
+  visibility: hidden;
+}
+.pv-item {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+.pv-item[hidden] {
+  display: none;
+}
+.pv-item > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pv-video {
+  display: grid;
+  place-items: center;
+  background: #000;
+}
+.pv-play,
+.pv-video iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+}
+.pv-play {
+  position: relative;
+  padding: 0;
+  background: #000;
+  cursor: pointer;
+}
+.pv-play img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pv-play-icon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin: -36px 0 0 -36px;
+  border-radius: 16px;
+  background: var(--sp-lime);
+  fill: var(--sp-on-accent);
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.5);
+  transition: transform 200ms var(--sp-ease-back);
+}
+.pv-play:hover .pv-play-icon,
+.pv-play:focus-visible .pv-play-icon {
+  transform: translateY(-3px) rotate(-6deg) scale(1.06);
+}
+
+.pv-thumbs {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pv-thumb {
+  position: relative;
+  flex: none;
+  width: 80px;
+  height: 50px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  background: var(--sp-surface);
+  opacity: 0.55;
+  cursor: pointer;
+  transition:
+    opacity 160ms var(--sp-ease-out),
+    box-shadow 160ms var(--sp-ease-out);
+}
+.pv-thumb:hover {
+  opacity: 0.85;
+}
+.pv-thumb[aria-pressed="true"] {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--sp-violet);
+}
+.pv-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pv-thumb svg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -8px 0 0 -8px;
+  fill: var(--sp-text);
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.8));
+}
+
+.pv-title {
+  margin: 0;
+  font: 800 clamp(40px, 4.4vw, 72px) / 0.95 var(--sp-font-display);
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.pv-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 20px 0 0;
+}
+.pv-year {
+  margin-right: 6px;
+  font: 800 17px/1 var(--sp-font-display);
+  color: var(--sp-violet);
+}
+.pv-tag {
+  padding: 6px 10px 7px;
+  border-radius: var(--sp-radius-sm);
+  background: var(--sp-surface);
+  color: var(--sp-text-muted);
+  font: 600 13px/1 var(--sp-font-body);
+}
+.pv-desc {
+  max-width: 36ch;
+  margin: 24px 0 0;
+  font: 400 clamp(18px, 0.8vw + 12px, 22px) / 1.45 var(--sp-font-body);
+  text-wrap: pretty;
+}
+.pv-body {
+  max-width: 60ch;
+  margin-top: 16px;
+  color: var(--sp-text-muted);
+}
+.pv-body > :first-child {
+  margin-top: 0;
+}
+.pv-body a {
+  color: var(--sp-violet);
+}
+.pv-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 32px;
+}
+
+/* One entrance: the text arrives just behind the cover. */
+.po.is-entering .pv-text > *,
+.po.is-entering .pv-thumbs {
+  animation: pv-in 480ms var(--sp-ease-out) both;
+}
+.po.is-entering .pv-thumbs {
+  animation-delay: 260ms;
+}
+.po.is-entering .pv-text > :nth-child(1) {
+  animation-delay: 140ms;
+}
+.po.is-entering .pv-text > :nth-child(2) {
+  animation-delay: 190ms;
+}
+.po.is-entering .pv-text > :nth-child(3) {
+  animation-delay: 240ms;
+}
+.po.is-entering .pv-text > :nth-child(n + 4) {
+  animation-delay: 290ms;
+}
+@keyframes pv-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@media (max-width: 959px) {
+  .po-body {
+    align-self: start;
+  }
+  .pv-stage {
+    border-radius: var(--sp-radius-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-card,
+  .apps-btn,
+  .po-body {
+    transition: none;
+  }
+  .pt:hover .pt-card,
+  .pt:focus-visible .pt-card,
+  .apps-btn:hover {
+    transform: none;
+  }
+  .launcher[open],
+  .launcher[open] .pt-card,
+  .po[open]::backdrop {
+    animation: none;
+  }
+}

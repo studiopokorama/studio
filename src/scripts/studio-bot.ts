@@ -12,6 +12,8 @@ import {
 type Mode = "home" | "aside" | "busy";
 type Task = (signal: AbortSignal) => Promise<void>;
 
+/** Distance the cursor and its label keep from the viewport edges (px). */
+const VIEW_MARGIN = 16;
 const TIDY_AFTER_MS = 6000;
 const TIDY_AFTER_SCRAMBLE_MS = 14000;
 const OFFER_AFTER_IDLE_MS = 14000;
@@ -45,6 +47,8 @@ export class StudioBot {
   private lastOffer = -Infinity;
   private timers = new Map<string, number>();
   private lastDodge = 0;
+  /** What the visitor's pointer is on right now, so the bot can get there once it's free. */
+  private hovered: { el: HTMLElement; say: string } | null = null;
 
   constructor(
     private wm: Wordmark,
@@ -66,11 +70,9 @@ export class StudioBot {
         this.onVisitorDrop(e.word);
       }
     });
-    if (opts.finePointer && !opts.reducedMotion) {
-      for (const cta of opts.ctas) {
-        cta.el.addEventListener("pointerenter", () => this.onCta(cta));
-        cta.el.addEventListener("pointerleave", () => this.onCta(null));
-      }
+    for (const cta of opts.ctas) {
+      cta.el.addEventListener("pointerenter", () => this.point(cta));
+      cta.el.addEventListener("pointerleave", () => this.point(null));
     }
   }
 
@@ -200,43 +202,64 @@ export class StudioBot {
     }
   }
 
-  /** Hovering a button: point at it (`null` = the pointer left a button). */
-  private onCta(cta: { el: HTMLElement; say: string } | null) {
+  /** Hovering a button or a project: point at it (`null` = the pointer left it). */
+  point(cta: { el: HTMLElement; say: string } | null) {
+    if (!this.opts.finePointer || this.opts.reducedMotion) return;
+    this.hovered = cta;
     if (this.visitorHolding()) return;
-    const pointing = this.taskName === "cta";
+    // Pointing, or on the way back from pointing: a new hover takes over either way.
+    const pointing = this.taskName === "cta" || this.taskName === "cta-home";
     if (cta) {
       this.clear("cta-leave");
-      // Busy with real work (tidying, the finale): don't drop it for a hover.
+      // Busy with real work (tidying, the finale): finish it first; `run` comes back for the hover.
       if (this.mode === "busy" && !pointing) return;
-      this.run(async (signal) => {
-        const r = cta.el.getBoundingClientRect();
-        this.cursor.setAway(true);
-        await this.cursor.moveTo(
-          this.clampToView({ x: r.left + r.width * 0.28, y: r.bottom + 6 }),
-          { signal, width: r.width },
-        );
-        this.cursor.say(cta.say, 6000);
-      }, "cta");
+      this.pointAt(cta);
     } else if (pointing) {
       // A short grace period, so moving straight onto the next button keeps pointing.
       this.schedule("cta-leave", 150, () => {
         if (this.taskName === "cta")
-          this.run((signal) => this.returnHome(signal));
+          this.run((signal) => this.returnHome(signal), "cta-home");
       });
     }
+  }
+
+  private pointAt(cta: { el: HTMLElement; say: string }) {
+    this.run(async (signal) => {
+      const r = cta.el.getBoundingClientRect();
+      // Point from below, or from above when the label wouldn't fit under it (the footer).
+      const flip =
+        r.bottom + 6 + this.cursor.labelExtent(false).bottom >
+        innerHeight - VIEW_MARGIN;
+      this.cursor.setFlipped(flip);
+      this.cursor.setAway(true);
+      await this.cursor.moveTo(
+        this.clampToView({
+          x: r.left + r.width * 0.28,
+          y: flip ? r.top - 6 : r.bottom + 6,
+        }),
+        { signal, width: r.width },
+      );
+      this.cursor.say(cta.say, 6000);
+    }, "cta");
   }
 
   // ─── tasks ───────────────────────────────────────────────────
 
   private run(task: Task, name = "") {
     this.cancel();
+    this.cursor.setFlipped(false); // only pointing flips it, and only for its own move
     const ctrl = new AbortController();
     this.task = ctrl;
     this.taskName = name;
     this.mode = "busy";
     task(ctrl.signal).then(
       () => {
-        if (this.task === ctrl) this.task = null;
+        if (this.task !== ctrl) return;
+        this.task = null;
+        // A hover that came in while the bot was busy.
+        const h = this.hovered;
+        if (h && !name.startsWith("cta") && !this.visitorHolding())
+          this.pointAt(h);
       },
       (err: unknown) => {
         if (this.task === ctrl) this.task = null;
@@ -339,6 +362,7 @@ export class StudioBot {
     const id = this.wm.floatingId();
     if (id === null || !this.wm.isResting()) return;
     this.mode = "home";
+    this.cursor.setFlipped(false);
     this.cursor.setAway(false);
     this.cursor.hush(); // back on the logo: no label, whatever was said on the way
     this.cursor.pinTo(() => this.wm.cursorOnTile(id));
@@ -459,13 +483,13 @@ export class StudioBot {
     return h === "user" || h === "key";
   }
 
-  /** Keep the cursor, and the label hanging below-right of it, fully on screen. */
+  /** Keep the cursor, and its label (below-right, or above-right when flipped), fully on screen. */
   private clampToView(p: Pt): Pt {
-    const m = 16;
+    const m = VIEW_MARGIN;
     const label = this.cursor.labelExtent();
     return {
       x: Math.min(innerWidth - m - label.right, Math.max(m, p.x)),
-      y: Math.min(innerHeight - m - label.bottom, Math.max(m, p.y)),
+      y: Math.min(innerHeight - m - label.bottom, Math.max(m + label.top, p.y)),
     };
   }
 

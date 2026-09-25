@@ -13,30 +13,13 @@ export class FoundBoard {
   private placed: Placement[] = [];
   private grid: SlotGrid = { cols: 0, rows: 0, originX: 0, originY: 0 };
   private glowTimer = 0;
-  private resizeFrame = 0;
-  private scrollTimer = 0;
 
   constructor(
     private layer: HTMLElement,
     /** Page content the words must stay clear of (viewport rects); the first one anchors the words. */
     private obstacles: () => DOMRect[],
     private reducedMotion: boolean,
-  ) {
-    window.addEventListener("resize", () => {
-      cancelAnimationFrame(this.resizeFrame);
-      this.resizeFrame = requestAnimationFrame(() => this.relayout());
-    });
-    // The layer is fixed but the content scrolls: once scrolling settles, lay the words out
-    // again around where the content now sits.
-    window.addEventListener(
-      "scroll",
-      () => {
-        clearTimeout(this.scrollTimer);
-        this.scrollTimer = window.setTimeout(() => this.relayout(), 150);
-      },
-      { passive: true },
-    );
-  }
+  ) {}
 
   /** Forget every found word and clear the board. */
   reset() {
@@ -87,7 +70,7 @@ export class FoundBoard {
   }
 
   /** Grid or content moved (resize, scroll): lay out every found word again, in the order they were found. */
-  private relayout() {
+  relayout() {
     this.measure();
     this.placed = [];
     this.layer.replaceChildren();

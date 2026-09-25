@@ -56,13 +56,30 @@ export class BotCursor {
     this.render(this.pos);
   }
 
-  /** How far the label reaches right of and below the tip (px), sized for its longest phrase. */
-  labelExtent(): { right: number; bottom: number } {
+  /**
+   * How far the arrow and label reach right of, below and above the tip (px), sized for the
+   * longest phrase. Upright the label hangs below; flipped (pointing down) it sits above.
+   */
+  labelExtent(flipped = this.flipped): {
+    right: number;
+    bottom: number;
+    top: number;
+  } {
     const scale = Number(this.el.style.getPropertyValue("--cursor-scale")) || 1;
+    const reach = 20 * scale + Math.max(this.label.offsetHeight, 20);
     return {
       right: 10 * scale + Math.max(this.label.offsetWidth, 130),
-      bottom: 20 * scale + Math.max(this.label.offsetHeight, 20),
+      bottom: flipped ? 0 : reach,
+      top: flipped ? reach : 0,
     };
+  }
+
+  private flipped = false;
+
+  /** Point down at something from above (when there's no room below it), label above the tip. */
+  setFlipped(on: boolean) {
+    this.flipped = on;
+    this.el.classList.toggle("is-flipped", on);
   }
 
   setAway(away: boolean) {

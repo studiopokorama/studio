@@ -1,0 +1,60 @@
+---
+import { projectPath, type Project } from "../projects";
+import ProjectView from "./ProjectView.astro";
+
+interface Props {
+  projects: Project[];
+  /** Server-render this project's view, already open (the /work/<slug>/ pages). */
+  open?: Project | undefined;
+}
+const { projects, open } = Astro.props;
+const index = projects.map((p) => ({
+  id: p.id,
+  title: p.data.title,
+  path: projectPath(p.id),
+}));
+---
+
+<dialog
+  class="po"
+  data-overlay
+  data-projects={JSON.stringify(index)}
+  aria-labelledby={open ? `pv-${open.id}` : undefined}
+  open={open ? true : undefined}
+>
+  <div class="po-frame" data-frame tabindex="-1" autofocus>
+    <div class="po-bar">
+      <button type="button" class="po-all" data-launcher-open>
+        All projects
+      </button>
+      <a class="po-close" href="/" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18"></path>
+        </svg>
+      </a>
+    </div>
+    <div class="po-body" data-body>
+      {open && <ProjectView project={open} />}
+    </div>
+    <nav class="po-nav" aria-label="More projects" data-nav hidden>
+      <a class="po-step" data-prev href="/">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M15 5l-7 7 7 7"></path>
+        </svg>
+        <span data-label></span>
+      </a>
+      <a class="po-step po-step-next" data-next href="/">
+        <span data-label></span>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M9 5l7 7-7 7"></path>
+        </svg>
+      </a>
+    </nav>
+  </div>
+</dialog>
+
+{projects.map((p) => (
+  <template data-view-template={p.id}>
+    <ProjectView project={p} />
+  </template>
+))}

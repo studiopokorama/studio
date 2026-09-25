@@ -1,0 +1,56 @@
+---
+import { Image } from "astro:assets";
+import { projectPath, type Project } from "../projects";
+
+interface Props {
+  project: Project;
+  /** Position in its group: staggers the drop-in. */
+  index: number;
+  /** Image `sizes`: the tile's rendered width. */
+  sizes: string;
+  /** Load the cover right away (on the board) rather than lazily (in the launcher). */
+  eager?: boolean;
+  /** Show the year in the top-right corner. */
+  showYear?: boolean;
+  /** Show the tags under the title. */
+  showTags?: boolean;
+}
+const {
+  project: p,
+  index,
+  sizes,
+  eager = false,
+  showYear = false,
+  showTags = false,
+} = Astro.props;
+// At most two, as plain text: "iOS · Android".
+const tags = showTags ? p.data.tags.slice(0, 2).join(" · ") : "";
+---
+
+<a
+  class="pt"
+  href={projectPath(p.id)}
+  data-project={p.id}
+  style={`--i:${index}`}
+>
+  <span class="pt-card" data-card>
+    <span class="pt-face" data-face>
+      {p.data.images.slice(0, 3).map((img, j) => (
+        <Image
+          class="pt-img"
+          src={img.src}
+          alt=""
+          widths={[320, 480, 640, 800]}
+          sizes={sizes}
+          loading={eager && j === 0 ? "eager" : "lazy"}
+          data-shot={j}
+        />
+      ))}
+      {showYear && <span class="pt-year">{p.data.year}</span>}
+      <span class="pt-label">
+        <span class="pt-title">{p.data.title}</span>
+        {tags && <span class="pt-tags">{tags}</span>}
+      </span>
+    </span>
+  </span>
+</a>

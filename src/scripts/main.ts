@@ -7,6 +7,13 @@ import { Sound } from "./sound";
 import { StudioBot } from "./studio-bot";
 import { Wordmark } from "./wordmark";
 import { FoundBoard } from "./found-board";
+import {
+  Launcher,
+  originOf,
+  ProjectOverlay,
+  type Origin,
+} from "./project-overlay";
+import { bindTile, Showcase } from "./showcase";
 import { findHiddenWord, HIDDEN_WORDS, TARGET } from "./words";
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -53,6 +60,10 @@ async function init() {
     ctas: [
       { el: need<HTMLElement>("[data-cta]"), say: "free demo" },
       { el: need<HTMLElement>("[data-contact]"), say: "friendly humans" },
+      ...[...document.querySelectorAll<HTMLElement>(".apps-btn")].map((el) => ({
+        el,
+        say: "all projects",
+      })),
     ],
   });
   const sound = new Sound();
@@ -66,27 +77,66 @@ async function init() {
   };
   const widen = (r: DOMRect, minWidth: number) =>
     new DOMRect(r.x, r.y, Math.max(r.width, minWidth), r.height);
+  /** The page content: the wordmark row first (found words gather around it). */
+  const contentRects = () => {
+    const row = need("[data-row]").getBoundingClientRect();
+    const lifted = wm.tileSize; // the resting tile and the cursor rise above the row
+    return [
+      new DOMRect(
+        row.x,
+        row.y - lifted,
+        row.width + lifted,
+        row.height + lifted,
+      ),
+      textRect(".wm-studio"),
+      // The caption's text changes as words are found; reserve room for the longest line.
+      widen(textRect("[data-caption]"), 520),
+      textRect(".lede"),
+      // The whole header band, edge to edge: nothing sits up among the buttons or against the top.
+      need(".top").getBoundingClientRect(),
+      textRect(".foot"),
+    ];
+  };
+  const showcaseEl = document.querySelector<HTMLElement>("[data-showcase]");
+  const showcase = showcaseEl
+    ? new Showcase(showcaseEl, {
+        reducedMotion,
+        finePointer,
+        obstacles: contentRects,
+        // Beside the lede, in the middle of the space right of it.
+        anchor: () => {
+          const lede = textRect(".lede");
+          return {
+            x: (lede.left + showcaseEl.clientWidth) / 2,
+            y: lede.top + lede.height / 2,
+          };
+        },
+      })
+    : null;
   const foundBoard = new FoundBoard(
     need("[data-found]"),
-    () => {
-      const row = need("[data-row]").getBoundingClientRect();
-      const lifted = wm.tileSize; // the resting tile and the cursor rise above the row
-      return [
-        new DOMRect(
-          row.x,
-          row.y - lifted,
-          row.width + lifted,
-          row.height + lifted,
-        ),
-        textRect(".wm-studio"),
-        // The caption's text changes as words are found; reserve room for the longest line.
-        widen(textRect("[data-caption]"), 520),
-        textRect(".lede"),
-        need("[data-actions]").getBoundingClientRect(),
-        textRect(".foot"),
-      ];
-    },
+    () => [...contentRects(), ...(showcase?.rects() ?? [])],
     reducedMotion,
+  );
+  // Tiles first: the found words then settle around them.
+  const relayout = () => {
+    showcase?.layout();
+    foundBoard.relayout();
+  };
+  let relayoutFrame = 0;
+  window.addEventListener("resize", () => {
+    cancelAnimationFrame(relayoutFrame);
+    relayoutFrame = requestAnimationFrame(relayout);
+  });
+  // The layers are fixed but the content can scroll on short screens: lay out again once it settles.
+  let scrollTimer = 0;
+  window.addEventListener(
+    "scroll",
+    () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(relayout, 150);
+    },
+    { passive: true },
   );
 
   wm.on((e) => {
@@ -170,10 +220,79 @@ async function init() {
   }
   resetBtn.addEventListener("click", reset);
 
+  // ─── projects ────────────────────────────────────────────────
+
+  const center = (r: DOMRect) => ({
+    x: r.left + r.width / 2,
+    y: r.top + r.height / 2,
+  });
+  const overlayEl = document.querySelector<HTMLDialogElement>("[data-overlay]");
+  const overlay = overlayEl
+    ? new ProjectOverlay(overlayEl, {
+        reducedMotion,
+        home: (id) => showcase?.card(id) ?? null,
+        onOpen: (id: string, from: Origin | null) => {
+          showcase?.setOpen(id);
+          bot.setPointer(null); // the cursor waits behind the overlay
+          if (from) {
+            sound.lift();
+            const c = center(from.rect);
+            board?.ripple(c.x, c.y, 0.8);
+          }
+        },
+        onClose: (_id, landed) => {
+          showcase?.setOpen(null);
+          if (landed) {
+            sound.snap(0.6);
+            const c = center(landed.getBoundingClientRect());
+            board?.ripple(c.x, c.y, 0.8);
+          }
+        },
+      })
+    : null;
+  const launcherEl =
+    document.querySelector<HTMLDialogElement>("[data-launcher]");
+  const launcher = launcherEl
+    ? new Launcher(launcherEl, {
+        reducedMotion,
+        onPick: (id, from) => overlay?.open(id, from),
+      })
+    : null;
+  for (const app of launcherEl?.querySelectorAll<HTMLElement>(
+    "[data-project]",
+  ) ?? []) {
+    bindTile(app, { reducedMotion, finePointer });
+    const warm = () => overlay?.warm(app.dataset.project ?? "");
+    app.addEventListener("pointerenter", warm);
+    app.addEventListener("focus", warm);
+  }
+  for (const btn of document.querySelectorAll("[data-launcher-open]"))
+    btn.addEventListener("click", () => {
+      sound.tick(4);
+      launcher?.open();
+    });
+  for (const tile of showcase?.tiles ?? []) {
+    tile.addEventListener("click", (e) => {
+      if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const card = showcase?.card(tile.dataset.project ?? "");
+      if (!overlay || !card) return;
+      e.preventDefault();
+      bot.point(null);
+      overlay.open(tile.dataset.project!, originOf(card));
+    });
+    const warm = () => overlay?.warm(tile.dataset.project ?? "");
+    tile.addEventListener("pointerenter", warm);
+    tile.addEventListener("focus", warm);
+    const cta = { el: tile, say: "take a look" };
+    tile.addEventListener("pointerenter", () => bot.point(cta));
+    tile.addEventListener("pointerleave", () => bot.point(null));
+  }
+  const inProject = () => !!overlay?.isOpen || !!launcher?.isOpen;
+
   const onPointer = (e: PointerEvent) => {
     const p = { x: e.clientX, y: e.clientY };
     board?.setPointer(p);
-    if (e.pointerType !== "touch") bot.setPointer(p);
+    if (e.pointerType !== "touch" && !inProject()) bot.setPointer(p);
   };
   window.addEventListener("pointermove", onPointer, { passive: true });
   window.addEventListener("pointerdown", onPointer, { passive: true });
@@ -251,6 +370,18 @@ async function init() {
           : [`You've found all ${HIDDEN_WORDS.length} words.`];
       },
     },
+    ...(launcher
+      ? [
+          {
+            name: "projects",
+            hint: "see everything we've made",
+            run: () => {
+              launcher.open();
+              return { close: true } as const;
+            },
+          },
+        ]
+      : []),
     {
       name: "sound",
       hint: "turn tile sounds on or off",
@@ -268,10 +399,17 @@ async function init() {
   need("[data-palette-open]").addEventListener("click", palette.open);
 
   if (import.meta.env.DEV)
-    Object.assign(window, { __pokorama: { wm, bot, board, foundBoard } });
+    Object.assign(window, {
+      __pokorama: { wm, bot, board, foundBoard, showcase, overlay, launcher },
+    });
 
   await wm.intro();
   bot.start();
+  if (showcase) {
+    await document.fonts.ready; // the tiles steer around the text, so measure it in its final font
+    relayout();
+    showcase.intro((at) => board?.ripple(at.x, at.y, 0.5));
+  }
 }
 
 init().catch((err: unknown) => {
