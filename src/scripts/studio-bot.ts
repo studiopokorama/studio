@@ -108,6 +108,11 @@ export class StudioBot {
    * Every word found: put the word together, drop the violet tile into its slot so the logo is
    * whole for a moment (`celebrate` runs then), and lift it back out. Always a work in progress.
    */
+  /** True while the bot idly adjusts its grip on the resting tile: nothing worth a sound. */
+  get fidgeting() {
+    return this.task !== null && this.taskName === "fidget";
+  }
+
   /** True from the start of the finale until reset: the word is finished and stays whole. */
   get done() {
     return this.completed;
@@ -435,7 +440,7 @@ export class StudioBot {
           await this.cursor.moveTo(home, { signal, width: 8, onStep });
           this.wm.release("bot", { toRest: true });
           this.goHomeNow();
-        });
+        }, "fidget");
       }
       this.scheduleFidget();
     });

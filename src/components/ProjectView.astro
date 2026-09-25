@@ -10,75 +10,106 @@ const { project } = Astro.props;
 const { title, description, year, tags, images, youtube, links } = project.data;
 const { Content } = await render(project);
 const hasBody = !!project.body?.trim();
-const items = images.length + youtube.length;
+// Gallery order: the cover (it's what flies in from the tile), then the videos, then the rest.
+const [cover, ...shots] = images;
+type Media =
+  | { kind: "image"; img: (typeof images)[number]; n: number }
+  | { kind: "video"; id: string; n: number };
+const media: Media[] = [
+  { kind: "image", img: cover!, n: 1 },
+  ...youtube.map((id, i): Media => ({ kind: "video", id, n: i + 1 })),
+  ...shots.map((img, i): Media => ({ kind: "image", img, n: i + 2 })),
+];
 ---
 
 <article class="pv" data-view={project.id} aria-labelledby={`pv-${project.id}`}>
   <div class="pv-media">
     <div class="pv-stage" data-stage>
-      {images.map((img, i) => (
-        <figure class="pv-item" data-item hidden={i > 0}>
-          <Image
-            src={img.src}
-            alt={img.alt}
-            widths={[640, 960, 1280, 1600]}
-            sizes="(min-width: 960px) 60vw, 100vw"
-            loading={i === 0 ? "eager" : "lazy"}
-            data-cover={i === 0 ? "" : undefined}
-          />
-        </figure>
-      ))}
-      {youtube.map((id, i) => (
-        <figure class="pv-item pv-video" data-item data-youtube={id} hidden>
-          <button type="button" class="pv-play" data-play>
-            <img
-              src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`}
-              alt=""
-              loading="lazy"
+      {media.length > 1 && (
+        <>
+          {/* Behind the items: only shown where a drag uncovers the stage. */}
+          <span class="pv-hint pv-hint-prev" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="76" height="76">
+              <path d="M15 4l-8 8 8 8" />
+            </svg>
+          </span>
+          <span class="pv-hint pv-hint-next" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="76" height="76">
+              <path d="M9 4l8 8-8 8" />
+            </svg>
+          </span>
+        </>
+      )}
+      {media.map((m, i) =>
+        m.kind === "image" ? (
+          <figure class="pv-item" data-item hidden={i > 0}>
+            <Image
+              src={m.img.src}
+              alt={m.img.alt}
+              widths={[640, 960, 1280, 1600]}
+              sizes="(min-width: 960px) 60vw, 100vw"
+              loading={i === 0 ? "eager" : "lazy"}
+              data-cover={i === 0 ? "" : undefined}
             />
-            <span class="pv-play-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="28" height="28">
+          </figure>
+        ) : (
+          <figure class="pv-item pv-video" data-item data-youtube={m.id} hidden>
+            <button type="button" class="pv-play" data-play>
+              <img
+                src={`https://i.ytimg.com/vi/${m.id}/hqdefault.jpg`}
+                alt=""
+                loading="lazy"
+              />
+              <span class="pv-play-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="28" height="28">
+                  <path d="M8 5.5v13l10.5-6.5z" />
+                </svg>
+              </span>
+              <span class="sr-only">
+                Play video {m.n} of {title}
+              </span>
+            </button>
+          </figure>
+        ),
+      )}
+    </div>
+    {media.length > 1 && (
+      <div class="pv-thumbs" role="group" aria-label="Media">
+        {media.map((m, i) =>
+          m.kind === "image" ? (
+            <button
+              type="button"
+              class="pv-thumb"
+              data-thumb={i}
+              aria-pressed={i === 0 ? "true" : "false"}
+              aria-label={`Image ${m.n}: ${m.img.alt}`}
+            >
+              <Image src={m.img.src} alt="" widths={[160]} sizes="80px" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              class="pv-thumb pv-thumb-video"
+              data-thumb={i}
+              aria-pressed="false"
+              aria-label={`Video ${m.n}`}
+            >
+              <img
+                src={`https://i.ytimg.com/vi/${m.id}/mqdefault.jpg`}
+                alt=""
+                loading="lazy"
+              />
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                aria-hidden="true"
+              >
                 <path d="M8 5.5v13l10.5-6.5z" />
               </svg>
-            </span>
-            <span class="sr-only">
-              Play video {i + 1} of {title}
-            </span>
-          </button>
-        </figure>
-      ))}
-    </div>
-    {items > 1 && (
-      <div class="pv-thumbs" role="group" aria-label="Media">
-        {images.map((img, i) => (
-          <button
-            type="button"
-            class="pv-thumb"
-            data-thumb={i}
-            aria-pressed={i === 0 ? "true" : "false"}
-            aria-label={`Image ${i + 1}: ${img.alt}`}
-          >
-            <Image src={img.src} alt="" widths={[160]} sizes="80px" />
-          </button>
-        ))}
-        {youtube.map((id, i) => (
-          <button
-            type="button"
-            class="pv-thumb pv-thumb-video"
-            data-thumb={images.length + i}
-            aria-pressed="false"
-            aria-label={`Video ${i + 1}`}
-          >
-            <img
-              src={`https://i.ytimg.com/vi/${id}/mqdefault.jpg`}
-              alt=""
-              loading="lazy"
-            />
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-              <path d="M8 5.5v13l10.5-6.5z" />
-            </svg>
-          </button>
-        ))}
+            </button>
+          ),
+        )}
       </div>
     )}
   </div>
@@ -94,11 +125,6 @@ const items = images.length + youtube.length;
       ))}
     </p>
     <p class="pv-desc">{description}</p>
-    {hasBody && (
-      <div class="pv-body">
-        <Content />
-      </div>
-    )}
     {links.length > 0 && (
       <div class="pv-links">
         {links.map((l, i) => (
@@ -111,6 +137,11 @@ const items = images.length + youtube.length;
             {l.label}
           </a>
         ))}
+      </div>
+    )}
+    {hasBody && (
+      <div class="pv-body">
+        <Content />
       </div>
     )}
   </div>

@@ -143,11 +143,11 @@ async function init() {
     if (e.type === "grab") {
       // Drop-target glow is for the visitor; it follows their pointer.
       board?.setDragging(e.holder !== "bot");
-      sound.lift();
+      if (!bot.fidgeting) sound.lift(); // the idle nudge stays silent
     } else if (e.type === "drop") {
       board?.setDragging(false);
       board?.ripple(e.at.x, e.at.y, e.holder === "bot" ? 0.55 : 1);
-      sound.snap(e.holder === "bot" ? 0.4 : 0.7);
+      if (!bot.fidgeting) sound.snap(e.holder === "bot" ? 0.4 : 0.7);
       if (e.holder !== "bot") onVisitorDrop(e.word);
     } else if (e.type === "rest") {
       board?.setDragging(false);

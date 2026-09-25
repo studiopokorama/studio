@@ -17,7 +17,10 @@ const FLY_MS = 460;
 const LEAVE_MS = 260;
 const SWITCH_MS = 160;
 const EASE = "cubic-bezier(0.2, 0.8, 0.2, 1)";
+/** A drag this far (px) along the main image moves to the next/previous item. */
 const SWIPE_PX = 40;
+/** Movement (px) before a press on the main image counts as a drag rather than a click. */
+const DRAG_START_PX = 6;
 
 /** The image a card is showing right now (the hover preview may be on another shot). */
 export function originOf(card: HTMLElement): Origin {
@@ -284,7 +287,8 @@ export class ProjectOverlay {
 
   // ─── gallery ─────────────────────────────────────────────────
 
-  private selectMedia: ((i: number) => void) | null = null;
+  /** Show item `i`; `dir` slides it in from that side (1: from the right, -1: left, 0: fade). */
+  private selectMedia: ((i: number, dir: number) => void) | null = null;
   private mediaIndex = 0;
   private mediaCount = 0;
 
@@ -296,52 +300,146 @@ export class ProjectOverlay {
     const stage = need(view, "[data-stage]");
     this.mediaIndex = 0;
     this.mediaCount = items.length;
-    this.selectMedia = (i) => {
+    const strip = view.querySelector<HTMLElement>(".pv-thumbs");
+    if (strip) dragScroll(strip, signal);
+    this.selectMedia = (i, dir) => {
       this.mediaIndex = i;
+      stage.style.setProperty("--slide", String(dir));
       items.forEach((item, j) => {
         if (j !== i) stopVideo(item);
         item.hidden = j !== i;
       });
       thumbs.forEach((t, j) => t.setAttribute("aria-pressed", String(j === i)));
+      if (strip && thumbs[i])
+        revealThumb(strip, thumbs[i], this.opts.reducedMotion);
     };
     thumbs.forEach((t, j) =>
-      t.addEventListener("click", () => this.selectMedia?.(j), { signal }),
+      t.addEventListener(
+        "click",
+        () => this.selectMedia?.(j, Math.sign(j - this.mediaIndex)),
+        { signal },
+      ),
+    );
+    // Steam-style loop: the active thumb's progress bar is the timer (CSS, so hovering pauses
+    // it); when it fills, move on. Playing a video stops the loop for good (.is-still).
+    const media = need(view, ".pv-media");
+    if (this.opts.reducedMotion || items.length < 2)
+      media.classList.add("is-still");
+    thumbs.forEach((t) =>
+      t.addEventListener(
+        "animationend",
+        (e) => {
+          if (e.animationName === "pv-progress") this.stepMedia(1);
+        },
+        { signal },
+      ),
     );
     view.addEventListener(
       "click",
       (e) => {
         const play = (e.target as Element).closest<HTMLElement>("[data-play]");
         const item = play?.closest<HTMLElement>("[data-youtube]");
-        if (play && item) playVideo(item);
+        if (play && item) {
+          media.classList.add("is-still");
+          playVideo(item);
+        }
       },
       { signal },
     );
-    // Swipe between media on touch screens.
-    let start: { x: number; y: number } | null = null;
+    // Drag the main image sideways (mouse or touch) to go to the next/previous item.
+    let drag: {
+      id: number;
+      x: number;
+      y: number;
+      dx: number;
+      moved: boolean;
+    } | null = null;
+    let dragged = false; // swallow the click that ends a drag (e.g. on a video's play button)
+    const shown = () => items[this.mediaIndex]!;
     stage.addEventListener(
       "pointerdown",
       (e) => {
-        if (e.pointerType === "touch") start = { x: e.clientX, y: e.clientY };
+        if (
+          e.button !== 0 ||
+          items.length < 2 ||
+          shown().querySelector("iframe")
+        )
+          return;
+        drag = {
+          id: e.pointerId,
+          x: e.clientX,
+          y: e.clientY,
+          dx: 0,
+          moved: false,
+        };
       },
       { signal },
     );
     stage.addEventListener(
-      "pointerup",
+      "pointermove",
       (e) => {
-        if (!start) return;
-        const dx = e.clientX - start.x;
-        const dy = e.clientY - start.y;
-        start = null;
-        if (Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy) * 1.5)
-          this.stepMedia(dx < 0 ? 1 : -1);
+        if (!drag || e.pointerId !== drag.id) return;
+        const dx = e.clientX - drag.x;
+        if (!drag.moved) {
+          if (Math.abs(dx) < DRAG_START_PX) return;
+          // Mostly vertical: a page scroll on touch screens, not ours.
+          if (Math.abs(e.clientY - drag.y) > Math.abs(dx)) {
+            drag = null;
+            return;
+          }
+          drag.moved = true;
+          stage.setPointerCapture(e.pointerId);
+          media.classList.add("is-dragging");
+        }
+        drag.dx = dx;
+        // Far enough to switch on release: the uncovered chevron lights up.
+        stage.classList.toggle("is-armed", Math.abs(dx) > SWIPE_PX);
+        const el = shown();
+        el.style.transition = "none";
+        el.style.transform = `translateX(${dx}px)`;
       },
       { signal },
     );
+    const endDrag = (e: PointerEvent) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const { dx, moved } = drag;
+      drag = null;
+      if (!moved) return;
+      dragged = true;
+      media.classList.remove("is-dragging");
+      stage.classList.remove("is-armed");
+      const el = shown();
+      if (e.type === "pointerup" && Math.abs(dx) > SWIPE_PX) {
+        el.style.transition = "";
+        el.style.transform = "";
+        this.stepMedia(dx < 0 ? 1 : -1);
+      } else {
+        el.style.transition = "transform 220ms var(--sp-ease-out)";
+        el.style.transform = "";
+      }
+    };
+    stage.addEventListener("pointerup", endDrag, { signal });
+    stage.addEventListener("pointercancel", endDrag, { signal });
+    stage.addEventListener(
+      "click",
+      (e) => {
+        if (!dragged) return;
+        dragged = false;
+        e.stopPropagation();
+        e.preventDefault();
+      },
+      { capture: true, signal },
+    );
+    stage.addEventListener("pointerdown", () => (dragged = false), { signal });
+    stage.addEventListener("dragstart", (e) => e.preventDefault(), { signal });
   }
 
   private stepMedia(d: number) {
     if (!this.selectMedia || this.mediaCount < 2) return;
-    this.selectMedia((this.mediaIndex + d + this.mediaCount) % this.mediaCount);
+    this.selectMedia(
+      (this.mediaIndex + d + this.mediaCount) % this.mediaCount,
+      Math.sign(d),
+    );
   }
 
   private stopGallery() {
@@ -493,6 +591,79 @@ export class Launcher {
       this.dialog.classList.remove("is-closing");
     }, 180);
   }
+}
+
+/** Scroll the thumbnail strip sideways (only) just enough to show `thumb`. */
+function revealThumb(strip: HTMLElement, thumb: HTMLElement, instant: boolean) {
+  const s = strip.getBoundingClientRect();
+  const t = thumb.getBoundingClientRect();
+  const pad = 8;
+  const by =
+    t.left < s.left
+      ? t.left - s.left - pad
+      : t.right > s.right
+        ? t.right - s.right + pad
+        : 0;
+  if (by) strip.scrollBy({ left: by, behavior: instant ? "auto" : "smooth" });
+}
+
+/**
+ * Drag a horizontally scrolling strip with the mouse (touch already scrolls it natively).
+ * A drag doesn't also click the thumbnail it ends on.
+ */
+function dragScroll(strip: HTMLElement, signal: AbortSignal) {
+  let drag: { id: number; x: number; left: number; moved: boolean } | null =
+    null;
+  let dragged = false;
+  strip.addEventListener(
+    "pointerdown",
+    (e) => {
+      dragged = false;
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+      if (strip.scrollWidth <= strip.clientWidth) return;
+      drag = {
+        id: e.pointerId,
+        x: e.clientX,
+        left: strip.scrollLeft,
+        moved: false,
+      };
+    },
+    { signal },
+  );
+  strip.addEventListener(
+    "pointermove",
+    (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.x;
+      if (!drag.moved) {
+        if (Math.abs(dx) < DRAG_START_PX) return;
+        drag.moved = true;
+        strip.setPointerCapture(e.pointerId);
+        strip.classList.add("is-dragging");
+      }
+      strip.scrollLeft = drag.left - dx;
+    },
+    { signal },
+  );
+  const end = (e: PointerEvent) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    dragged = drag.moved;
+    drag = null;
+    strip.classList.remove("is-dragging");
+  };
+  strip.addEventListener("pointerup", end, { signal });
+  strip.addEventListener("pointercancel", end, { signal });
+  strip.addEventListener(
+    "click",
+    (e) => {
+      if (!dragged) return;
+      dragged = false;
+      e.stopPropagation();
+      e.preventDefault();
+    },
+    { capture: true, signal },
+  );
+  strip.addEventListener("dragstart", (e) => e.preventDefault(), { signal });
 }
 
 function playVideo(item: HTMLElement) {

@@ -11,7 +11,7 @@ const latest = Astro.props.projects.slice(0, BOARD_PROJECTS);
 {latest.length > 0 && (
   <nav class="showcase" data-showcase aria-label="Latest projects">
     {latest.map((p, i) => (
-      <ProjectTile project={p} index={i} sizes="140px" eager />
+      <ProjectTile project={p} index={i} sizes="140px" eager short />
     ))}
   </nav>
 )}

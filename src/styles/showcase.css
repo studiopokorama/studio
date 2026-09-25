@@ -135,13 +135,15 @@ html:not(.js) .showcase .pt {
   /* Solid, no backdrop blur: inside the tilting face it would be re-blurred every frame. */
   background: rgb(18 17 21 / 0.85);
 }
+/* Up to two lines, then an ellipsis. */
 .pt-title {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  font: 800 16px/1 var(--sp-font-display);
+  font: 800 16px/1.1 var(--sp-font-display);
   letter-spacing: -0.02em;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 .pt-year {
   position: absolute;
@@ -325,8 +327,10 @@ html:not(.js) .apps-btn {
     right: 12px;
   }
 }
+/* `backwards`, not `both`: a fill that holds the end state would override the hover transition. */
 .launcher[open] .pt-card {
-  animation: pt-drop 520ms var(--sp-ease-back) calc(90ms + var(--i) * 60ms) both;
+  animation: pt-drop 520ms var(--sp-ease-back) calc(90ms + var(--i) * 60ms)
+    backwards;
 }
 
 /* ─── project overlay ──────────────────────────────────────── */
@@ -462,6 +466,8 @@ html:not(.js) .pv-thumbs {
 
 .pv {
   display: grid;
+  /* minmax(0, …): the thumbnail strip scrolls inside the column instead of widening it. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px 56px;
   width: 100%;
   max-width: 1280px;
@@ -482,6 +488,49 @@ html:not(.js) .pv-thumbs {
   background: var(--sp-surface-deep);
   box-shadow: inset 0 0 0 1px var(--sp-line);
 }
+/* Big chevrons behind the items, uncovered by a drag: which way it goes, a touch brighter once
+   letting go will switch. */
+.pv-hint {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 120px;
+  margin-top: -38px;
+  /* Barely off the stage background: a hint, not a control. */
+  color: #2a2830;
+  transition: color 160ms var(--sp-ease-out);
+}
+.pv-hint-prev {
+  left: 0;
+}
+.pv-hint-next {
+  right: 0;
+}
+.pv-hint path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pv-stage.is-armed .pv-hint {
+  color: var(--sp-line);
+}
+
+/* Drag sideways to go through the media. */
+.pv-stage {
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.pv-media.is-dragging .pv-stage {
+  cursor: grabbing;
+}
+.pv-stage img {
+  -webkit-user-drag: none;
+}
 .pv-stage.is-covered {
   visibility: hidden;
 }
@@ -492,6 +541,16 @@ html:not(.js) .pv-thumbs {
 }
 .pv-item[hidden] {
   display: none;
+}
+/* The shown item slides in from the side it came from (--slide: 1 right, -1 left, 0 fade). */
+.pv-item:not([hidden]) {
+  animation: pv-item-in 420ms var(--sp-ease-out);
+}
+@keyframes pv-item-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--slide, 0) * 56px));
+  }
 }
 .pv-item > img {
   display: block;
@@ -551,6 +610,15 @@ html:not(.js) .pv-thumbs {
   overflow-x: auto;
   scrollbar-width: none;
 }
+.pv-thumbs.is-dragging {
+  cursor: grabbing;
+}
+.pv-thumbs.is-dragging .pv-thumb {
+  cursor: inherit;
+}
+.pv-thumbs img {
+  -webkit-user-drag: none;
+}
 .pv-thumb {
   position: relative;
   flex: none;
@@ -573,6 +641,39 @@ html:not(.js) .pv-thumbs {
 .pv-thumb[aria-pressed="true"] {
   opacity: 1;
   box-shadow: 0 0 0 2px var(--sp-violet);
+}
+/* Auto-advance, as on a Steam store page: a bar fills under the active thumb, then the next
+   item shows (the script listens for the end of this animation). */
+.pv-thumb::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: var(--sp-violet);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+.pv-media:not(.is-still) .pv-thumb[aria-pressed="true"]::after {
+  animation: pv-progress 5.5s linear forwards;
+}
+/* Same selector shape as the rule above: the `animation` shorthand there resets the play state,
+   so a less specific pause would lose. */
+@media (hover: hover) {
+  .pv-media:not(.is-still):hover .pv-thumb[aria-pressed="true"]::after {
+    animation-play-state: paused;
+  }
+}
+.pv-media:not(.is-still):has(:focus-visible)
+  .pv-thumb[aria-pressed="true"]::after,
+.pv-media:not(.is-still).is-dragging .pv-thumb[aria-pressed="true"]::after {
+  animation-play-state: paused;
+}
+@keyframes pv-progress {
+  to {
+    transform: scaleX(1);
+  }
 }
 .pv-thumb img {
   display: block;
@@ -635,7 +736,10 @@ html:not(.js) .pv-thumbs {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 32px;
+  margin-top: 28px;
+}
+.pv-links + .pv-body {
+  margin-top: 28px;
 }
 
 /* One entrance: the text arrives just behind the cover. */
@@ -687,7 +791,8 @@ html:not(.js) .pv-thumbs {
   }
   .launcher[open],
   .launcher[open] .pt-card,
-  .po[open]::backdrop {
+  .po[open]::backdrop,
+  .pv-item:not([hidden]) {
     animation: none;
   }
 }
