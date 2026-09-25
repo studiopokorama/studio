@@ -93,9 +93,10 @@ void main() {
   col = mix(col, u_stripe, stripe * inside * 0.55 * vig);
 
   // Progress: each slot lights up once u_progress passes its key. Keys grow with distance
-  // from the centre, jittered per slot, so the lit area spreads outward irregularly.
+  // from the top-left corner, jittered per slot, so the lit area spreads diagonally with a ragged edge.
   float h = fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
-  float dn = length((cellCenter - center) / max(center, vec2(1.0))) / 1.42;
+  vec2 topLeft = vec2(0.0, u_size.y); // y up
+  float dn = length((cellCenter - topLeft) / max(u_size, vec2(1.0))) / 1.42;
   float key = mix(dn, h, 0.45);
   float lit = smoothstep(key - 0.02, key + 0.02, u_progress * 1.05);
 
