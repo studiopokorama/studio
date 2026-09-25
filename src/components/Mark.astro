@@ -1,0 +1,24 @@
+---
+// Small "poko" mark, straight from the generated brand file (npm run brand).
+import mark from "../../brand/logo/svg/mark-56.svg?raw";
+
+interface Props {
+  size?: number;
+}
+const { size = 44 } = Astro.props;
+---
+
+<span class="mark" style={`--m:${size}px`} aria-hidden="true" set:html={mark} />
+
+<style>
+  .mark {
+    display: block;
+    width: var(--m);
+    height: var(--m);
+  }
+  .mark :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+</style>

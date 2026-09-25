@@ -1,0 +1,32 @@
+---
+import { HIDDEN_WORDS, REST_INDEX, TARGET } from "../scripts/words";
+---
+
+<div class="wm" style={`--rest:${REST_INDEX}`}>
+  <p class="wm-studio" aria-hidden="true">
+    studio
+  </p>
+  <div
+    class="wm-row"
+    data-row
+    role="group"
+    aria-label="pokorama, spelled in movable letter tiles. Press Space on a tile to pick it up, arrow keys to move it, Space to drop."
+  >
+    <div class="wm-gap" data-gap aria-hidden="true"></div>
+    {[...TARGET].map((ch, i) => (
+      <button
+        type="button"
+        class="tile"
+        data-tile={i}
+        style={`--slot:${i}`}
+        data-rest={i === REST_INDEX ? "" : undefined}
+        aria-label={`Tile ${ch}`}
+      >
+        {ch}
+      </button>
+    ))}
+  </div>
+  <p class="wm-caption" data-caption aria-live="polite">
+    Drag the tiles. {HIDDEN_WORDS.length} words are hidden in here.
+  </p>
+</div>

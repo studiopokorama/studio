@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56">
+  <!-- "poko" in a 2x2 grid. The violet p and second o are pieces in play: tilted 8deg. -->
+  <rect width="56" height="56" rx="14" fill="#1B1A1F"/>
+  <g transform="rotate(8 17 17)"><rect x="7" y="7" width="20" height="20" rx="5" fill="#9B7BF5"/></g>
+  <g transform="rotate(8 17 17)"><text x="17" y="17" font-family="'Bricolage Grotesque', sans-serif" font-weight="800" font-size="12.5" fill="#121115" text-anchor="middle" dominant-baseline="central">p</text></g>
+  <rect x="29" y="7" width="20" height="20" rx="5" fill="#2A2830"/>
+  <text x="39" y="17" font-family="'Bricolage Grotesque', sans-serif" font-weight="800" font-size="12.5" fill="#EDEBE6" text-anchor="middle" dominant-baseline="central">o</text>
+  <rect x="7" y="29" width="20" height="20" rx="5" fill="#2A2830"/>
+  <text x="17" y="39" font-family="'Bricolage Grotesque', sans-serif" font-weight="800" font-size="12.5" fill="#EDEBE6" text-anchor="middle" dominant-baseline="central">k</text>
+  <g transform="rotate(8 39 39)"><rect x="29" y="29" width="20" height="20" rx="5" fill="#9B7BF5"/></g>
+  <g transform="rotate(8 39 39)"><text x="39" y="39" font-family="'Bricolage Grotesque', sans-serif" font-weight="800" font-size="12.5" fill="#121115" text-anchor="middle" dominant-baseline="central">o</text></g>
+</svg>

@@ -1,0 +1,33 @@
+:root {
+  /* Color: dark only */
+  --sp-bg: #121115;
+  --sp-surface: #2A2830;      /* tiles, cards */
+  --sp-surface-deep: #1B1A1F; /* mark container, recessed */
+  --sp-slot-stripe: #1C1B21;  /* empty-slot hatching */
+  --sp-line: #3A3842;         /* slot outline, hairlines */
+  --sp-text: #EDEBE6;
+  --sp-text-muted: #B7B5BD;
+  --sp-text-faint: #9A98A0;   /* "studio", labels */
+  --sp-lime: #B8E04A;         /* cursor, primary CTA */
+  --sp-violet: #9B7BF5;       /* the dragged piece */
+  --sp-on-accent: #121115;
+
+  /* Type */
+  --sp-font-display: "Bricolage Grotesque", sans-serif; /* 800 */
+  --sp-font-body: "Figtree", sans-serif;                /* 400/600 */
+  --sp-font-mono: "JetBrains Mono", monospace;          /* 400/600 */
+
+  /* Tiles */
+  --sp-tile: 56px; --sp-tile-radius: 12px; --sp-tile-font: 34px; --sp-tile-gap: 4px;
+  --sp-slot-fill: repeating-linear-gradient(135deg, transparent 0 6px, var(--sp-slot-stripe) 6px 8px);
+  --sp-slot-border: inset 0 0 0 2px var(--sp-line);
+  --sp-drag-transform: translate(26px, -40px) rotate(7deg);
+  --sp-drag-shadow: 0 14px 24px rgba(0, 0, 0, .55);
+
+  /* Radius */
+  --sp-radius-sm: 8px; --sp-radius-md: 12px; --sp-radius-lg: 20px; --sp-radius-xl: 24px; --sp-radius-pill: 999px;
+
+  /* Motion */
+  --sp-ease-out: cubic-bezier(.2, .8, .2, 1);
+  --sp-ease-back: cubic-bezier(.34, 1.56, .64, 1);
+}
