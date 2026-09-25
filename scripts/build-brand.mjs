@@ -27,7 +27,7 @@ const CHROME =
 
 const BG = "#121115";
 const DEEP = "#1B1A1F";
-const TAGLINE = ["Apps, games and media.", "Improving piece by piece."];
+const TAGLINE = ["Apps, games and media.", "Building piece by piece."];
 
 // ─── SVG: text → outlines ─────────────────────────────────────
 
