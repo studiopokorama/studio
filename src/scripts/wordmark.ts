@@ -67,6 +67,7 @@ export class Wordmark {
   private follow: SpringConfig;
   private abort = new AbortController();
   private celebrateTimer = 0;
+  private locked = false;
 
   constructor(
     private row: HTMLElement,
@@ -188,6 +189,21 @@ export class Wordmark {
       }, i * 60);
     });
     this.celebrateTimer = window.setTimeout(() => this.clearCelebration(), ms);
+  }
+
+  /** Locked: the visitor can't pick tiles up (the finished word after the finale). The bot still can. */
+  setLocked(locked: boolean) {
+    this.locked = locked;
+    this.row.classList.toggle("is-locked", locked);
+  }
+
+  /** A small hop, as if the tile was tapped. */
+  poke(id: number) {
+    const t = this.tiles[id];
+    if (!t) throw new Error(`unknown tile ${id}`);
+    if (this.reducedMotion) return;
+    t.y.velocity -= this.size * 3.5;
+    this.kick();
   }
 
   clearCelebration() {
@@ -518,6 +534,7 @@ export class Wordmark {
         "pointerdown",
         (e) => {
           if (
+            this.locked ||
             e.button !== 0 ||
             this.floating?.holder === "user" ||
             this.floating?.holder === "key"
@@ -550,6 +567,7 @@ export class Wordmark {
       el.addEventListener(
         "keydown",
         (e) => {
+          if (this.locked) return;
           const held =
             this.floating?.holder === "key" && this.floating.id === t.id;
           if (e.key === " " || e.key === "Enter") {

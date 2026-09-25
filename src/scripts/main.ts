@@ -9,6 +9,8 @@ import { Wordmark } from "./wordmark";
 import { FoundBoard } from "./found-board";
 import { findHiddenWord, HIDDEN_WORDS, TARGET } from "./words";
 
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
 function need<T extends Element>(sel: string): T {
   const el = document.querySelector<T>(sel);
   if (!el) throw new Error(`missing element ${sel}`);
@@ -116,19 +118,51 @@ async function init() {
       board?.setProgress(found.size / total);
       const at = foundBoard.add(hit);
       if (at) board?.ripple(at.x, at.y, 0.45);
-      if (found.size === total) {
-        const center = { x: innerWidth / 2, y: innerHeight / 2 };
-        foundBoard.celebrate(center);
-        board?.ripple(center.x, center.y, 1);
-      }
+      if (found.size === total) finale();
     }
     caption.textContent =
       found.size === total
-        ? `All ${total} words found. You should work here.`
+        ? `All ${total} words found. You are a legend.`
         : isNew
           ? `You found “${hit}”. ${found.size} of ${total}.`
           : `“${hit}” again. ${found.size} of ${total} found.`;
   }
+
+  /** Every word found: replay the words, then the bot closes the logo with a wave and a chord. */
+  function finale() {
+    wm.setLocked(true); // the word is finished: it stays whole until reset
+    const leadIn = async () => {
+      await sleep(reducedMotion ? 0 : 900); // let the last word's own highlight land first
+      await foundBoard.replay(1500, (i, n) =>
+        sound.note(n > 1 ? i / (n - 1) : 1),
+      );
+    };
+    bot.finale(leadIn, async () => {
+      const ids = wm.currentOrder();
+      wm.celebrate(ids, 2600);
+      if (!reducedMotion)
+        ids.forEach((_, i) => setTimeout(() => sound.tick(i * 2), i * 60));
+      board?.flash();
+      await sleep(reducedMotion ? 0 : ids.length * 60 + 120);
+      sound.chord();
+      await sleep(1200);
+      resetBtn.hidden = false;
+    });
+  }
+
+  const resetBtn = need<HTMLButtonElement>("[data-reset]");
+  const startCaption = caption.textContent?.trim() ?? "";
+  /** Back to the beginning: no words found, empty board, the violet tile lifted out again. */
+  function reset() {
+    found.clear();
+    foundBoard.reset();
+    board?.setProgress(0);
+    caption.textContent = startCaption;
+    wm.setLocked(false);
+    bot.reset();
+    resetBtn.hidden = true;
+  }
+  resetBtn.addEventListener("click", reset);
 
   const onPointer = (e: PointerEvent) => {
     const p = { x: e.clientX, y: e.clientY };
@@ -174,6 +208,8 @@ async function init() {
       name: "scramble",
       hint: "mix up the tiles",
       run: () => {
+        if (bot.done)
+          return ["Every word is found. Press Reset to play again."];
         bot.scramble();
         return { close: true };
       },
@@ -182,6 +218,8 @@ async function init() {
       name: "solve",
       hint: "put the tiles back",
       run: () => {
+        if (bot.done)
+          return ["It's already solved. Press Reset to play again."];
         bot.tidy();
         return { close: true };
       },

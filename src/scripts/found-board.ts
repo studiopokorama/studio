@@ -38,6 +38,14 @@ export class FoundBoard {
     );
   }
 
+  /** Forget every found word and clear the board. */
+  reset() {
+    this.clearGlow();
+    this.words = [];
+    this.placed = [];
+    this.layer.replaceChildren();
+  }
+
   get count() {
     return this.words.length;
   }
@@ -55,20 +63,27 @@ export class FoundBoard {
     return this.center(p);
   }
 
-  /** Every word found: a violet sweep across the placed tiles, outward from `from`. */
-  celebrate(from: Pt) {
-    if (this.reducedMotion) return;
-    for (const tile of this.layer.querySelectorAll<HTMLElement>(".fw-tile")) {
-      const x = Number(tile.dataset.x) - from.x;
-      const y = Number(tile.dataset.y) - from.y;
-      tile.style.setProperty(
-        "--sweep-delay",
-        `${Math.round(Math.hypot(x, y) * 0.9)}ms`,
-      );
-      tile.classList.remove("is-sweep");
-      void tile.offsetWidth; // restart the animation
-      tile.classList.add("is-sweep");
+  /**
+   * Every word found: light the words up again one by one, in the order they were found.
+   * `onWord` fires as each lights (for its note). Resolves once the last one has lit.
+   */
+  async replay(
+    totalMs: number,
+    onWord: (index: number, count: number) => void,
+  ): Promise<void> {
+    this.clearGlow();
+    const count = this.placed.length;
+    const step = this.reducedMotion ? 0 : totalMs / Math.max(1, count);
+    // Read placements fresh each step: a resize or scroll can relayout the board mid-replay.
+    for (let i = 0; i < this.placed.length; i++) {
+      for (const c of cells(this.placed[i]!))
+        this.layer
+          .querySelector<HTMLElement>(`[data-cell="${cellKey(c.col, c.row)}"]`)
+          ?.classList.add("is-new");
+      onWord(i, count);
+      if (step) await new Promise((r) => setTimeout(r, step));
     }
+    this.glowTimer = window.setTimeout(() => this.clearGlow(), NEW_GLOW_MS);
   }
 
   /** Grid or content moved (resize, scroll): lay out every found word again, in the order they were found. */

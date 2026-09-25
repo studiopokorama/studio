@@ -6,6 +6,7 @@ import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/600.css";
 import "../styles/tokens.css";
 import "../styles/global.css";
+import Mark from "../components/Mark.astro";
 import Palette from "../components/Palette.astro";
 import Wordmark from "../components/Wordmark.astro";
 import { CONTACT_EMAIL } from "../config";
@@ -57,6 +58,9 @@ const ogImage = new URL("/og.png", Astro.site).href;
 
     <div class="page">
       <header class="top">
+        <a class="home" href="/" aria-label="Studio Pokorama home">
+          <Mark size={44} />
+        </a>
         <a class="btn btn-primary" data-cta href={`mailto:${CONTACT_EMAIL}`}>
           Say hello
         </a>
@@ -75,6 +79,9 @@ const ogImage = new URL("/og.png", Astro.site).href;
       <footer class="foot">
         <span>© 2026 Studio Pokorama</span>
         <span class="foot-actions">
+          <button type="button" class="foot-btn" data-reset hidden>
+            Reset
+          </button>
           <button type="button" class="foot-btn" data-sound aria-pressed="true">
             Sound on
           </button>

@@ -35,6 +35,8 @@ const wait = (ms: number, signal: AbortSignal) =>
  */
 export class StudioBot {
   private mode: Mode = "home";
+  /** Every word found: the word stays whole and the bot admires it until reset. */
+  private completed = false;
   private task: AbortController | null = null;
   /** Kept after the task finishes so the CTA leave can tell whether the bot is still pointing at it. */
   private taskName = "";
@@ -87,7 +89,7 @@ export class StudioBot {
   // ─── commands ────────────────────────────────────────────────
 
   scramble() {
-    if (this.visitorHolding()) return;
+    if (this.visitorHolding() || this.completed) return;
     this.clear("tidy"); // a pending tidy would undo the scramble halfway through
     this.run(async (signal) => {
       this.cursor.say("hold on");
@@ -98,8 +100,68 @@ export class StudioBot {
     });
   }
 
+  /**
+   * Every word found: put the word together, drop the violet tile into its slot so the logo is
+   * whole for a moment (`celebrate` runs then), and lift it back out. Always a work in progress.
+   */
+  /** True from the start of the finale until reset: the word is finished and stays whole. */
+  get done() {
+    return this.completed;
+  }
+
+  /**
+   * Every word found. `leadIn` runs first (the replay), then the bot puts the word together and
+   * drops the violet tile into its slot so the logo is whole (`celebrate` runs then), and from then
+   * on admires it until reset. Scramble, solve and tidy are refused from the moment this is called.
+   */
+  finale(leadIn: () => Promise<void>, celebrate: () => Promise<void>) {
+    // Called from the visitor's own drop, so nothing can be held; if it is, the state is broken.
+    if (this.visitorHolding())
+      throw new Error("finale started while the visitor holds a tile");
+    this.completed = true;
+    this.clear("tidy", "offer");
+    this.run(async (signal) => {
+      await leadIn();
+      this.cursor.setAway(true);
+      if (this.wm.word() !== TARGET) {
+        this.cursor.say("one sec");
+        await this.perform(
+          solveMoves(this.wm.currentOrder(), this.wm.letters()),
+          signal,
+        );
+      }
+      const id = this.wm.floatingId();
+      if (id !== null) {
+        const t = this.wm.tileSize;
+        await this.cursor.moveTo(this.wm.cursorOnTile(id), {
+          signal,
+          width: t,
+        });
+        this.wm.grabAsBot(id);
+        const slot = this.wm.cursorOnSlot(this.wm.currentOrder().indexOf(id));
+        await this.cursor.moveTo(slot, {
+          signal,
+          width: t,
+          onStep: (p) => this.wm.move("bot", p),
+        });
+        this.wm.release("bot");
+      }
+      this.cursor.say("done", 2600);
+      await celebrate();
+      await wait(1600, signal);
+      await this.admire(signal);
+    });
+  }
+
+  /** Back to the beginning: lift the violet tile out again and carry on as usual. */
+  reset() {
+    this.completed = false;
+    this.clear("tidy", "offer");
+    this.run((signal) => this.liftToRest(signal));
+  }
+
   tidy() {
-    if (this.visitorHolding()) return;
+    if (this.visitorHolding() || this.completed) return;
     this.clear("tidy");
     this.run(async (signal) => {
       if (this.wm.word() !== TARGET) {
@@ -201,6 +263,32 @@ export class StudioBot {
       await this.cursor.moveTo(target, { signal, width: t, onStep });
       this.wm.release("bot");
       await this.cursor.hold(140, { signal });
+    }
+  }
+
+  /**
+   * The finished word, admired: read along it tapping each tile (a small hop), then step back
+   * and look at it for a while. Loops until reset. With reduced motion it just steps back.
+   */
+  private async admire(signal: AbortSignal) {
+    this.cursor.setAway(true);
+    const t = this.wm.tileSize;
+    if (this.opts.reducedMotion) {
+      await this.cursor.moveTo(this.asidePoint(), { signal, width: 60 });
+      return;
+    }
+    for (;;) {
+      for (const [i, id] of this.wm.currentOrder().entries()) {
+        const c = this.wm.slotCenter(i);
+        await this.cursor.moveTo(
+          { x: c.x + 0.2 * t, y: c.y + 0.25 * t },
+          { signal, width: t, pauseWhen: this.visitorNear },
+        );
+        await this.cursor.hold(80, { signal });
+        this.wm.poke(id);
+      }
+      await this.cursor.moveTo(this.asidePoint(), { signal, width: 60 });
+      await wait(4500 + Math.random() * 2500, signal);
     }
   }
 

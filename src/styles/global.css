@@ -100,20 +100,10 @@ body {
 .fw-tile.is-dropping {
   animation: fw-drop 420ms var(--sp-ease-back) var(--drop-delay, 0ms) both;
 }
-.fw-tile.is-sweep {
-  animation: fw-sweep 1400ms var(--sp-ease-out) var(--sweep-delay, 0ms) both;
-}
 @keyframes fw-drop {
   from {
     opacity: 0;
     transform: translateY(-18px) scale(0.85);
-  }
-}
-@keyframes fw-sweep {
-  20% {
-    background: color-mix(in srgb, var(--sp-violet) 55%, var(--sp-surface));
-    color: #e4dcfd;
-    transform: scale(1.05);
   }
 }
 
@@ -147,9 +137,13 @@ body {
 .top {
   display: flex;
   align-items: center;
-  /* No logo here: the hero wordmark is the logo on the homepage. */
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 24px 0;
+}
+
+.home {
+  display: block;
+  border-radius: var(--sp-radius-md);
 }
 
 .btn {
@@ -250,6 +244,12 @@ body {
 .tile:hover:not(.is-lifted) {
   background: #322f39;
 }
+.wm-row.is-locked .tile {
+  cursor: default;
+}
+.wm-row.is-locked .tile:hover:not(.is-found, .is-lifted) {
+  background: var(--sp-surface);
+}
 
 /* Before JS: the resting brand pose, straight from the reference. */
 .tile[data-rest] {
@@ -334,6 +334,9 @@ html:not(.js) .tile[data-rest],
   letter-spacing: inherit;
   text-transform: inherit;
   cursor: pointer;
+}
+.foot-btn[hidden] {
+  display: none;
 }
 .foot-btn:hover {
   color: var(--sp-text);

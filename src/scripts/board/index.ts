@@ -31,6 +31,7 @@ const POINTER_EPS = 0.25; // CSS px
 const FACTOR_RATE = 8;
 const FACTOR_EPS = 0.002;
 const PROGRESS_RATE = 1.6; // slow, so newly lit slots visibly fade in
+const FLASH_MS = 1500;
 
 const UNIFORMS = [
   "u_size",
@@ -39,6 +40,7 @@ const UNIFORMS = [
   "u_prox",
   "u_drag",
   "u_progress",
+  "u_flash",
   "u_ripples",
   ...Object.keys(COLORS),
 ] as const;
@@ -140,6 +142,7 @@ export function createBoard(
 
   let raf = 0;
   let lastTime = 0;
+  let flashStart = -Infinity;
   let destroyed = false;
 
   function resize(): void {
@@ -208,7 +211,9 @@ export function createBoard(
 
   /** Draws one frame; returns the number of live ripples. */
   function draw(now: number): number {
-    const alive = packRipples(ripples, now, cssH, rippleData);
+    const flashing = now - flashStart <= FLASH_MS;
+    const alive =
+      packRipples(ripples, now, cssH, rippleData) + (flashing ? 1 : 0);
     if (!res || gl.isContextLost()) return alive;
     const { loc } = res;
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -218,6 +223,8 @@ export function createBoard(
     gl.uniform1f(loc.u_prox, current.prox);
     gl.uniform1f(loc.u_drag, current.drag);
     gl.uniform1f(loc.u_progress, current.progress);
+    const flash = (now - flashStart) / FLASH_MS;
+    gl.uniform1f(loc.u_flash, flash >= 0 && flash <= 1 ? flash : -1);
     gl.uniform4fv(loc.u_ripples, rippleData);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     return alive;
@@ -300,6 +307,11 @@ export function createBoard(
     setDragging(dragging) {
       if (destroyed) return;
       target.drag = dragging ? 1 : 0;
+      schedule();
+    },
+    flash() {
+      if (destroyed || reduced) return;
+      flashStart = performance.now();
       schedule();
     },
     setProgress(fraction) {

@@ -85,6 +85,89 @@ export class Sound {
     });
   }
 
+  /** One bell note from a rising two-octave pentatonic scale; `position` 0..1 runs low to high. */
+  note(position: number) {
+    const ctx = this.live();
+    if (!ctx) return;
+    const scale = [523.25, 587.33, 659.25, 783.99, 880];
+    const steps = scale.length * 2;
+    const i = Math.round(Math.min(1, Math.max(0, position)) * (steps - 1));
+    const freq = scale[i % scale.length]! * 2 ** Math.floor(i / scale.length);
+    const t = ctx.currentTime;
+    for (const [mult, type, level] of [
+      [1, "sine", 0.12],
+      [2, "triangle", 0.03],
+    ] as const) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq * mult, t);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(level, t + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.75);
+    }
+  }
+
+  /** Wooden click that climbs with `step`, for a wave running along the tiles. */
+  tick(step: number) {
+    const ctx = this.live();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    const f = 380 * 2 ** (step / 12) * 1.5;
+    osc.frequency.setValueAtTime(f, t);
+    osc.frequency.exponentialRampToValueAtTime(f * 0.5, t + 0.06);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.12, t + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.1);
+  }
+
+  /** The closing chord: warm, slightly detuned, with a soft shimmer on top. */
+  chord() {
+    const ctx = this.live();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const out = ctx.createGain();
+    out.gain.value = 0.9;
+    out.connect(ctx.destination);
+    // C major add9, spread over two octaves.
+    const notes = [130.81, 261.63, 329.63, 392.0, 587.33, 783.99];
+    notes.forEach((freq, i) => {
+      for (const detune of [-5, 5]) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = i === 0 ? "sine" : "triangle";
+        osc.frequency.setValueAtTime(freq, t);
+        osc.detune.setValueAtTime(detune, t);
+        const start = t + i * 0.025; // a gentle strum
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.035, start + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 2.4);
+        osc.connect(gain).connect(out);
+        osc.start(start);
+        osc.stop(start + 2.5);
+      }
+    });
+    const bell = ctx.createOscillator();
+    const bg = ctx.createGain();
+    bell.type = "sine";
+    bell.frequency.setValueAtTime(2093, t + 0.12);
+    bg.gain.setValueAtTime(0.0001, t + 0.12);
+    bg.gain.exponentialRampToValueAtTime(0.05, t + 0.13);
+    bg.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+    bell.connect(bg).connect(out);
+    bell.start(t + 0.12);
+    bell.stop(t + 1.7);
+  }
+
   /** Softer, higher tick as a tile lifts. */
   lift() {
     const ctx = this.live();

@@ -27,6 +27,7 @@ uniform vec2 u_pointer;   // CSS px, y up
 uniform float u_prox;     // 0..1 proximity strength
 uniform float u_drag;     // 0..1 dragging factor
 uniform float u_progress; // 0..1 share of words found
+uniform float u_flash;    // 0..1 position of the finale wave, < 0 when idle
 uniform vec4 u_ripples[MAX_RIPPLES]; // x, y (CSS px, y up), age (s), amplitude (0 = inactive)
 
 uniform vec3 u_bg;
@@ -108,6 +109,15 @@ void main() {
   // Lit slots: a violet outline over the neutral one. Kept dim so the hero stays readable.
   float litA = lit * (0.06 + 0.3 * vig);
   col = mix(col, mix(u_line, u_violet, 0.85), outline * litA * (1.0 - prox * 0.5));
+
+  // Finale: a violet wave runs diagonally from the top-left, lighting outlines and tinting slots.
+  if (u_flash >= 0.0) {
+    float front = u_flash * 1.3 - 0.1;
+    float x = (dn - front) / 0.07;
+    float wave = exp(-x * x) * (1.0 - u_flash * 0.5);
+    col = mix(col, u_violet, inside * wave * 0.1);
+    col = mix(col, u_violet, outline * wave * 0.85);
+  }
 
   gl_FragColor = vec4(col, 1.0);
 }
