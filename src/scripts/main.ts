@@ -18,6 +18,12 @@ import { findHiddenWord, HIDDEN_WORDS, TARGET } from "./words";
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
+/** Every this many words found, a smaller celebration (the full finale is for all of them). */
+const MILESTONE_EVERY = 4;
+/** Everyone starts on level 1; each milestone is a level up. */
+const level = (wordsFound: number) =>
+  1 + Math.floor(wordsFound / MILESTONE_EVERY);
+
 function need<T extends Element>(sel: string): T {
   const el = document.querySelector<T>(sel);
   if (!el) throw new Error(`missing element ${sel}`);
@@ -175,32 +181,63 @@ async function init() {
       const at = foundBoard.add(hit);
       if (at) board?.ripple(at.x, at.y, 0.45);
       if (found.size === total) finale();
+      else if (found.size % MILESTONE_EVERY === 0) milestone();
     }
     caption.textContent =
       found.size === total
         ? `All ${total} words found. You are a legend.`
         : isNew
-          ? `You found “${hit}”. ${found.size} of ${total}.`
+          ? `You found “${hit}”. ${found.size} of ${total}.` +
+            (found.size % MILESTONE_EVERY === 0
+              ? ` You are now on Level ${level(found.size)}!`
+              : "")
           : `“${hit}” again. ${found.size} of ${total} found.`;
+  }
+
+  /** The found words light up again one by one, each with a note, after the newest one's own highlight. */
+  async function replayFound() {
+    await sleep(reducedMotion ? 0 : 900); // let the last word's own highlight land first
+    await foundBoard.replay(1500, (i, n) =>
+      sound.note(n > 1 ? i / (n - 1) : 1),
+    );
+  }
+
+  /** The tiles hop in a wave (in whatever order they're in), the board flashes, ticks, a chord. */
+  async function hopWave() {
+    const ids = wm.currentOrder();
+    wm.celebrate(ids, 2600);
+    if (!reducedMotion)
+      ids.forEach((_, i) => setTimeout(() => sound.tick(i * 2), i * 60));
+    board?.flash();
+    await sleep(reducedMotion ? 0 : ids.length * 60 + 120);
+    sound.chord();
+  }
+
+  /** The one milestone playing now, if any: the finale waits for it rather than overlapping. */
+  let milestoneRun: Promise<void> | null = null;
+
+  /** Every few words: the finale's replay and wave, without the bot putting the word together. */
+  function milestone() {
+    const run = (async () => {
+      await milestoneRun;
+      await replayFound();
+      await hopWave();
+    })();
+    milestoneRun = run;
+    void run.finally(() => {
+      if (milestoneRun === run) milestoneRun = null;
+    });
   }
 
   /** Every word found: replay the words, then the bot closes the logo with a wave and a chord. */
   function finale() {
     wm.setLocked(true); // the word is finished: it stays whole until reset
     const leadIn = async () => {
-      await sleep(reducedMotion ? 0 : 900); // let the last word's own highlight land first
-      await foundBoard.replay(1500, (i, n) =>
-        sound.note(n > 1 ? i / (n - 1) : 1),
-      );
+      await milestoneRun;
+      await replayFound();
     };
     bot.finale(leadIn, async () => {
-      const ids = wm.currentOrder();
-      wm.celebrate(ids, 2600);
-      if (!reducedMotion)
-        ids.forEach((_, i) => setTimeout(() => sound.tick(i * 2), i * 60));
-      board?.flash();
-      await sleep(reducedMotion ? 0 : ids.length * 60 + 120);
-      sound.chord();
+      await hopWave();
       await sleep(1200);
       resetBtn.hidden = false;
     });
