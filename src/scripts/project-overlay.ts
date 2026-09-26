@@ -593,38 +593,54 @@ export class Launcher {
   }
 }
 
-/** Scroll the thumbnail strip sideways (only) just enough to show `thumb`. */
+/** A thumbnail strip runs down the side in portrait mode, across otherwise. */
+const isColumn = (strip: HTMLElement) =>
+  getComputedStyle(strip).flexDirection === "column";
+
+/** Scroll the thumbnail strip (only the strip, along its own axis) just enough to show `thumb`. */
 function revealThumb(strip: HTMLElement, thumb: HTMLElement, instant: boolean) {
+  const col = isColumn(strip);
   const s = strip.getBoundingClientRect();
   const t = thumb.getBoundingClientRect();
+  const [start, end, sStart, sEnd] = col
+    ? [t.top, t.bottom, s.top, s.bottom]
+    : [t.left, t.right, s.left, s.right];
   const pad = 8;
   const by =
-    t.left < s.left
-      ? t.left - s.left - pad
-      : t.right > s.right
-        ? t.right - s.right + pad
-        : 0;
-  if (by) strip.scrollBy({ left: by, behavior: instant ? "auto" : "smooth" });
+    start < sStart ? start - sStart - pad : end > sEnd ? end - sEnd + pad : 0;
+  if (!by) return;
+  const behavior = instant ? "auto" : "smooth";
+  strip.scrollBy(col ? { top: by, behavior } : { left: by, behavior });
 }
 
 /**
- * Drag a horizontally scrolling strip with the mouse (touch already scrolls it natively).
- * A drag doesn't also click the thumbnail it ends on.
+ * Drag a scrolling thumbnail strip with the mouse, along its axis (touch already scrolls it
+ * natively). A drag doesn't also click the thumbnail it ends on.
  */
 function dragScroll(strip: HTMLElement, signal: AbortSignal) {
-  let drag: { id: number; x: number; left: number; moved: boolean } | null =
-    null;
+  let drag: {
+    id: number;
+    at: number;
+    from: number;
+    col: boolean;
+    moved: boolean;
+  } | null = null;
   let dragged = false;
   strip.addEventListener(
     "pointerdown",
     (e) => {
       dragged = false;
       if (e.pointerType !== "mouse" || e.button !== 0) return;
-      if (strip.scrollWidth <= strip.clientWidth) return;
+      const col = isColumn(strip);
+      const overflows = col
+        ? strip.scrollHeight > strip.clientHeight
+        : strip.scrollWidth > strip.clientWidth;
+      if (!overflows) return;
       drag = {
         id: e.pointerId,
-        x: e.clientX,
-        left: strip.scrollLeft,
+        at: col ? e.clientY : e.clientX,
+        from: col ? strip.scrollTop : strip.scrollLeft,
+        col,
         moved: false,
       };
     },
@@ -634,14 +650,15 @@ function dragScroll(strip: HTMLElement, signal: AbortSignal) {
     "pointermove",
     (e) => {
       if (!drag || e.pointerId !== drag.id) return;
-      const dx = e.clientX - drag.x;
+      const d = (drag.col ? e.clientY : e.clientX) - drag.at;
       if (!drag.moved) {
-        if (Math.abs(dx) < DRAG_START_PX) return;
+        if (Math.abs(d) < DRAG_START_PX) return;
         drag.moved = true;
         strip.setPointerCapture(e.pointerId);
         strip.classList.add("is-dragging");
       }
-      strip.scrollLeft = drag.left - dx;
+      if (drag.col) strip.scrollTop = drag.from - d;
+      else strip.scrollLeft = drag.from - d;
     },
     { signal },
   );

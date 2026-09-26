@@ -7,22 +7,30 @@ interface Props {
   project: Project;
 }
 const { project } = Astro.props;
-const { title, description, year, tags, images, youtube, links } = project.data;
+const { title, description, year, tags, images, youtube, links, portrait } =
+  project.data;
 const { Content } = await render(project);
 const hasBody = !!project.body?.trim();
-// Gallery order: the cover (it's what flies in from the tile), then the videos, then the rest.
-const [cover, ...shots] = images;
+// Gallery order: the images (the cover first: it's what flies in from the tile), then the videos.
 type Media =
   | { kind: "image"; img: (typeof images)[number]; n: number }
   | { kind: "video"; id: string; n: number };
 const media: Media[] = [
-  { kind: "image", img: cover!, n: 1 },
+  ...images.map((img, i): Media => ({ kind: "image", img, n: i + 1 })),
   ...youtube.map((id, i): Media => ({ kind: "video", id, n: i + 1 })),
-  ...shots.map((img, i): Media => ({ kind: "image", img, n: i + 2 })),
 ];
 ---
 
-<article class="pv" data-view={project.id} aria-labelledby={`pv-${project.id}`}>
+<article
+  class:list={["pv", { "is-portrait": portrait }]}
+  style={
+    portrait
+      ? `--ratio:${images[0]!.src.width} / ${images[0]!.src.height}`
+      : undefined
+  }
+  data-view={project.id}
+  aria-labelledby={`pv-${project.id}`}
+>
   <div class="pv-media">
     <div class="pv-stage" data-stage>
       {media.length > 1 && (

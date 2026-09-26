@@ -24,6 +24,8 @@ const projects = defineCollection({
       tags: z.array(z.string()).default([]),
       /** The first image is the cover: the tile on the home page and the preview image. */
       images: z.array(z.object({ src: image(), alt: z.string() })).min(1),
+      /** Portrait images (e.g. phone screenshots): a tall main image, thumbnails in a column beside it. */
+      portrait: z.boolean().default(false),
       /** YouTube video IDs (the 11 characters after watch?v=). */
       youtube: z.array(z.string().regex(/^[\w-]{11}$/)).default([]),
       /**
