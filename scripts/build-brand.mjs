@@ -176,9 +176,31 @@ const paddedMark = svgs.mark
   )
   .replace(/<\/svg>\s*$/, "</g></svg>");
 await writeFile(path.join(out.svg, "mark-padded.svg"), paddedMark);
-await renderSvg(paddedMark, path.join(out.png, "mark-padded-1024.png"), {
-  scale: 1024 / 112,
-});
+for (const px of [256, 512, 1024])
+  await renderSvg(paddedMark, path.join(out.png, `mark-padded-${px}.png`), {
+    scale: px / 112,
+  });
+
+// Transparent mark: the tiles where the mark has them, without the background square.
+const transparentMark = svgs.mark.replace(MARK_BG, "");
+await writeFile(path.join(out.svg, "mark-transparent.svg"), transparentMark);
+for (const px of [256, 512, 1024])
+  await renderSvg(
+    transparentMark,
+    path.join(out.png, `mark-transparent-${px}.png`),
+    { scale: px / 112 },
+  );
+
+// Square mark: the tiles where the mark has them, on a full-bleed square of the mark's background.
+const squareMark = svgs.mark.replace(
+  MARK_BG,
+  `<rect width="112" height="112" fill="${DEEP}"/>`,
+);
+await writeFile(path.join(out.svg, "mark-square.svg"), squareMark);
+for (const px of [256, 512, 1024])
+  await renderSvg(squareMark, path.join(out.png, `mark-square-${px}.png`), {
+    scale: px / 112,
+  });
 
 // App icons: full-bleed square (platforms apply their own corner mask).
 const icon = (px, file) =>

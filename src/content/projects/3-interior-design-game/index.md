@@ -1,6 +1,6 @@
 ---
-title: Interior Design by Pokorama
-shortTitle: Interior Design Game
+title: "Pokoje: Interior Design Game"
+shortTitle: Pokoje
 description: A relaxing design game where creativity takes center stage. Transform fully furnished blank rooms into warm, inviting spaces using a rich collection of fabrics, textures, patterns, and paints.
 tags: [Steam, iOS, Android]
 year: 2026
