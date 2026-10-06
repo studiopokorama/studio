@@ -1,7 +1,7 @@
 ---
 # PLACEHOLDER project: replace the text, images and video with real content.
 title: Cozy Horror
-description: A calm money tracker for people who hate spreadsheets. Everything fits on one screen.
+description: An upcoming cozy horror game, currently in development. More details soon.
 tags: [iOS, SwiftUI]
 year: 2025
 images:
