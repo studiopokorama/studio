@@ -5,11 +5,11 @@ description: An upcoming cozy horror game, currently in development. More detail
 tags: [iOS, SwiftUI]
 year: 2025
 images:
-  - src: ./cover.jpg
-    alt: Placeholder art, a phone showing a list of transactions.
-  - src: ./shot-1.jpg
-    alt: Placeholder art, the phone next to a large balance figure.
-  - src: ./shot-2.jpg
-    alt: Placeholder art, the phone tilted the other way.
+  - src: ./diorama.jpg
+    alt: Miniature bedroom in a display case on a workbench
+  - src: ./bedroom.jpg
+    alt: Decorated bedroom
+  - src: ./brief.jpg
+    alt: Order sheet with material swatches
 youtube: []
 ---
