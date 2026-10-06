@@ -706,7 +706,7 @@ function stopVideo(item: HTMLElement) {
 }
 
 /** A click that should stay in the page (not a new tab or window). */
-function plainClick(e: MouseEvent) {
+export function plainClick(e: MouseEvent) {
   return !(e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey);
 }
 

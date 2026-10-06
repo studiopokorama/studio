@@ -1,0 +1,54 @@
+---
+import { docPath, type DocPage } from "../docs";
+import DocView from "./DocView.astro";
+
+interface Props {
+  pages: DocPage[];
+  /** Server-render this page open (the /<slug>/ URLs). */
+  open?: DocPage | undefined;
+}
+const { pages, open } = Astro.props;
+const index = pages.map((p) => ({
+  id: p.id,
+  title: p.data.title,
+  path: docPath(p.id),
+}));
+---
+
+<dialog
+  class="po doc-overlay"
+  data-doc-overlay
+  data-docs={JSON.stringify(index)}
+  aria-labelledby={open ? `doc-${open.id}` : undefined}
+  open={open ? true : undefined}
+>
+  <div class="po-frame" data-frame tabindex="-1" autofocus>
+    <div class="po-bar">
+      <nav class="doc-tabs" aria-label="Studio">
+        {pages.map((p) => (
+          <a
+            href={docPath(p.id)}
+            data-doc={p.id}
+            aria-current={open?.id === p.id ? "page" : undefined}
+          >
+            {p.data.shortTitle ?? p.data.title}
+          </a>
+        ))}
+      </nav>
+      <a class="po-close" href="/" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18"></path>
+        </svg>
+      </a>
+    </div>
+    <div class="doc-body" data-body>
+      {open && <DocView page={open} />}
+    </div>
+  </div>
+</dialog>
+
+{pages.map((p) => (
+  <template data-doc-template={p.id}>
+    <DocView page={p} />
+  </template>
+))}

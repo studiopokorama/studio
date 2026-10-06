@@ -1,0 +1,61 @@
+---
+import { Image } from "astro:assets";
+import { render } from "astro:content";
+import type { DocPage } from "../docs";
+
+interface Props {
+  page: DocPage;
+}
+const { page } = Astro.props;
+const { title, updated, team } = page.data;
+const { Content } = await render(page);
+const updatedLabel = updated?.toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+---
+
+<article class="doc" data-doc-view={page.id} aria-labelledby={`doc-${page.id}`}>
+  <h1 class="doc-title" id={`doc-${page.id}`}>
+    {title}
+  </h1>
+  {updated && (
+    <p class="doc-updated">
+      Last updated{" "}
+      <time datetime={updated.toISOString().slice(0, 10)}>{updatedLabel}</time>
+    </p>
+  )}
+  <div class="prose">
+    <Content />
+  </div>
+  {team.length > 0 && (
+    <ul class="team">
+      {team.map((m) => (
+        <li class="member">
+          <span class="member-photo">
+            {m.photo ? (
+              <Image src={m.photo} alt="" widths={[240, 480]} sizes="240px" />
+            ) : (
+              <span class="member-initial" aria-hidden="true">
+                {m.name.trim()[0]?.toLowerCase()}
+              </span>
+            )}
+          </span>
+          <span class="member-name">{m.name}</span>
+          <span class="member-role">{m.role}</span>
+          {m.links.length > 0 && (
+            <span class="member-links">
+              {m.links.map((l) => (
+                <a href={l.href} target="_blank" rel="noopener">
+                  {l.label}
+                </a>
+              ))}
+            </span>
+          )}
+        </li>
+      ))}
+    </ul>
+  )}
+</article>

@@ -19,6 +19,11 @@ body {
   overflow-x: hidden;
 }
 
+/* While an overlay (project, text page, launcher, commands) is open, only it scrolls. */
+html:has(dialog:modal) {
+  overflow: hidden;
+}
+
 ::selection {
   background: var(--sp-violet);
   color: var(--sp-on-accent);
@@ -331,8 +336,27 @@ html:not(.js) .tile[data-rest],
   text-transform: uppercase;
   color: var(--sp-text-faint);
 }
+/* "© 2026 Studio Pokorama" and the text-page links: one line when there's room, else two. */
 .foot-copy {
   grid-area: copy;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 20px;
+}
+.foot-docs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+}
+.foot-docs a {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 4px;
+}
+.foot-docs a:hover,
+.foot-docs a[aria-current="page"] {
+  color: var(--sp-text);
 }
 .apps-btn {
   grid-area: apps;
@@ -345,16 +369,34 @@ html:not(.js) .tile[data-rest],
 }
 /* Narrow: the projects button gets its own row, centered above the rest. */
 @media (max-width: 720px) {
+  /* Phones: the logo, then two full-width rows, "© 2026 · page links" and the buttons. */
   .foot {
-    grid-template-columns: auto auto;
+    grid-template-columns: 1fr;
     grid-template-areas:
-      "apps apps"
-      "copy actions";
-    gap: 16px 12px;
+      "apps"
+      "copy"
+      "actions";
+    gap: 10px;
     padding-top: 12px;
   }
   .apps-btn {
     justify-self: center;
+  }
+  .foot-copy {
+    justify-content: space-between;
+  }
+  /* The wordmark already says it: "© 2026" leaves the room for the page links. */
+  .foot-name {
+    display: none;
+  }
+  .foot-docs {
+    gap: 2px 16px;
+  }
+  /* Full width, with the button text (not its padding) lined up with the row above. */
+  .foot-actions {
+    justify-self: stretch;
+    justify-content: space-between;
+    margin: 0 -10px;
   }
 }
 .foot-btn {

@@ -1,15 +1,16 @@
 import { CONTACT_EMAIL } from "../config";
-import { createBoard } from "./board";
-import type { Board } from "./board/types";
+import { startBoard } from "./board/start";
 import { BotCursor } from "./cursor";
 import { createPalette } from "./palette";
 import { Sound } from "./sound";
 import { StudioBot } from "./studio-bot";
+import { DocOverlay } from "./doc-overlay";
 import { Wordmark } from "./wordmark";
 import { FoundBoard } from "./found-board";
 import {
   Launcher,
   originOf,
+  plainClick,
   ProjectOverlay,
   type Origin,
 } from "./project-overlay";
@@ -30,26 +31,14 @@ function need<T extends Element>(sel: string): T {
   return el;
 }
 
-function initBoard(reducedMotion: boolean): Board | null {
-  try {
-    const board = createBoard(need<HTMLCanvasElement>("[data-board]"), {
-      reducedMotion,
-    });
-    if (!board) document.documentElement.classList.add("no-gl");
-    return board;
-  } catch (err) {
-    // The board is decoration: fall back to the CSS pattern, but keep the failure visible.
-    console.error("board: WebGL init failed, using CSS fallback", err);
-    document.documentElement.classList.add("no-gl");
-    return null;
-  }
-}
-
 async function init() {
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = matchMedia("(hover: hover) and (pointer: fine)").matches;
 
-  const board = initBoard(reducedMotion);
+  const board = startBoard(
+    need<HTMLCanvasElement>("[data-board]"),
+    reducedMotion,
+  );
   const wm = new Wordmark(
     need("[data-row]"),
     need("[data-gap]"),
@@ -324,7 +313,20 @@ async function init() {
     tile.addEventListener("pointerenter", () => bot.point(cta));
     tile.addEventListener("pointerleave", () => bot.point(null));
   }
-  const inProject = () => !!overlay?.isOpen || !!launcher?.isOpen;
+  // Privacy, terms, about: the footer links open them over the page.
+  const docEl = document.querySelector<HTMLDialogElement>("[data-doc-overlay]");
+  const docs = docEl ? new DocOverlay(docEl, { reducedMotion }) : null;
+  for (const a of document.querySelectorAll<HTMLElement>(
+    ".foot-docs [data-doc]",
+  ))
+    a.addEventListener("click", (e) => {
+      if (!docs || !plainClick(e)) return;
+      e.preventDefault();
+      docs.open(a.dataset.doc!);
+    });
+
+  const inProject = () =>
+    !!overlay?.isOpen || !!launcher?.isOpen || !!docs?.isOpen;
 
   const onPointer = (e: PointerEvent) => {
     const p = { x: e.clientX, y: e.clientY };

@@ -1,0 +1,22 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getDocPages, type DocPage } from "../docs";
+import Home from "../layouts/Home.astro";
+import { getProjects, type Project } from "../projects";
+
+export const getStaticPaths = (async () => {
+  const [pages, projects] = await Promise.all([getDocPages(), getProjects()]);
+  return pages.map((page) => ({
+    params: { page: page.id },
+    props: { page, projects },
+  }));
+}) satisfies GetStaticPaths;
+
+interface Props {
+  page: DocPage;
+  projects: Project[];
+}
+const { page, projects } = Astro.props;
+---
+
+<Home projects={projects} doc={page} />

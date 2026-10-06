@@ -1,0 +1,234 @@
+/* ─── text pages (privacy, terms, about): an overlay like the project view ─── */
+
+/* The pages as tabs in the overlay's bar, set like the footer. */
+.doc-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  font: 400 12px/1.5 var(--sp-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sp-text-faint);
+}
+.doc-tabs a {
+  padding: 6px 0;
+  color: inherit;
+  text-decoration: none;
+}
+.doc-tabs a:hover,
+.doc-tabs a[aria-current="page"] {
+  color: var(--sp-text);
+}
+
+/* Solid behind text: the home page showing through, even faintly, fights with reading. */
+.doc-overlay::backdrop {
+  background: var(--sp-bg);
+}
+
+/* A reading column down the middle of the overlay; the frame scrolls, not the page under it. */
+.doc-body {
+  align-self: start;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: clamp(8px, 4vh, 48px) 0 clamp(48px, 10vh, 120px);
+}
+.doc-overlay.is-entering .doc {
+  animation: pv-in 480ms var(--sp-ease-out) both;
+}
+
+.doc-title {
+  margin: 0;
+  font: 800 clamp(36px, 5vw, 56px) / 1 var(--sp-font-display);
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+/* Set like the wordmark's caption. */
+.doc-updated {
+  margin: 14px 0 0;
+  font: 400 12px/1.5 var(--sp-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sp-text-faint);
+}
+
+/* Markdown. */
+.prose {
+  margin-top: 32px;
+  font: 400 17px/1.7 var(--sp-font-body);
+  color: var(--sp-text-muted);
+  overflow-wrap: break-word;
+}
+.prose > * {
+  margin: 0;
+}
+.prose > * + * {
+  margin-top: 1em;
+}
+.prose h2 {
+  margin-top: 2em;
+  font: 800 26px/1.15 var(--sp-font-display);
+  letter-spacing: -0.02em;
+  color: var(--sp-text);
+}
+.prose h3 {
+  margin-top: 1.6em;
+  font: 600 19px/1.3 var(--sp-font-body);
+  color: var(--sp-text);
+}
+.prose h2 + *,
+.prose h3 + * {
+  margin-top: 0.6em;
+}
+.prose strong {
+  font-weight: 600;
+  color: var(--sp-text);
+}
+.prose a {
+  color: var(--sp-violet);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.prose a:hover {
+  color: var(--sp-text);
+}
+.prose ul,
+.prose ol {
+  padding-left: 1.3em;
+}
+.prose li + li {
+  margin-top: 0.35em;
+}
+.prose li::marker {
+  color: var(--sp-violet);
+}
+.prose blockquote {
+  padding: 2px 0 2px 18px;
+  border-left: 3px solid var(--sp-violet);
+  color: var(--sp-text);
+}
+.prose code {
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  background: var(--sp-surface);
+  font: 400 0.88em/1 var(--sp-font-mono);
+}
+.prose pre {
+  padding: 16px 18px;
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-surface-deep);
+  overflow-x: auto;
+}
+.prose pre code {
+  padding: 0;
+  background: none;
+  line-height: 1.6;
+}
+.prose hr {
+  margin: 2.2em 0;
+  border: 0;
+  border-top: 1px solid var(--sp-line);
+}
+/* Wide tables scroll sideways instead of widening the page. */
+.prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.prose th,
+.prose td {
+  padding: 10px 14px 10px 0;
+  border-bottom: 1px solid var(--sp-line);
+  text-align: left;
+  vertical-align: top;
+}
+.prose th {
+  font-weight: 600;
+  color: var(--sp-text);
+}
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--sp-radius-md);
+}
+
+/* Team: square tiles like the project tiles; the name's initial when there's no photo. */
+.team {
+  display: grid;
+  /* Two across on any phone (a tile is never over half the width), three on wider screens. */
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(180px, calc(50% - 8px)), 1fr)
+  );
+  gap: 28px 16px;
+  margin: 40px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.member-photo {
+  display: block;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--sp-radius-md);
+  background: var(--sp-surface);
+  transition:
+    transform 240ms var(--sp-ease-out),
+    box-shadow 240ms var(--sp-ease-out);
+}
+.member:hover .member-photo {
+  transform: translate(3px, -6px) rotate(1.5deg);
+  box-shadow: var(--sp-drag-shadow);
+}
+.member-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.member-initial {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding-bottom: 6%;
+  font: 800 clamp(56px, 9vw, 88px) / 1 var(--sp-font-display);
+  letter-spacing: -0.03em;
+  color: var(--sp-text);
+}
+.member-name {
+  display: block;
+  margin-top: 12px;
+  font: 800 18px/1.2 var(--sp-font-display);
+  letter-spacing: -0.02em;
+}
+.member-role {
+  display: block;
+  margin-top: 4px;
+  font: 400 14px/1.4 var(--sp-font-body);
+  color: var(--sp-text-muted);
+}
+.member-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 8px;
+  font: 600 13px/1.4 var(--sp-font-body);
+}
+.member-links a {
+  color: var(--sp-violet);
+  text-decoration: none;
+}
+.member-links a:hover {
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .member-photo {
+    transition: none;
+  }
+  .member:hover .member-photo {
+    transform: none;
+  }
+}

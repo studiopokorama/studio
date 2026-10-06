@@ -39,4 +39,40 @@ const projects = defineCollection({
     }),
 });
 
-export const collections = { projects };
+/**
+ * Simple text pages (privacy policy, terms, about): src/content/pages/<order>-<slug>.md, served
+ * at /<slug>/. Linked in the footer, highest number first, labelled `shortTitle` or `title`.
+ */
+const pages = defineCollection({
+  loader: glob({
+    pattern: "*.md",
+    base: "./src/content/pages",
+    generateId: ({ entry }) => parseFolder(entry.replace(/\.md$/, "")).slug,
+  }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      /** The footer link's label, when `title` is long ("Privacy" for "Privacy policy"). */
+      shortTitle: z.string().optional(),
+      /** One or two sentences for search results and link previews. */
+      description: z.string(),
+      /** Shown as "Last updated …" (legal pages). */
+      updated: z.coerce.date().optional(),
+      /** People shown as a grid under the text (the about page). */
+      team: z
+        .array(
+          z.object({
+            name: z.string(),
+            role: z.string(),
+            /** Square-ish portrait; without one, the tile shows the name's initial. */
+            photo: image().optional(),
+            links: z
+              .array(z.object({ label: z.string(), href: z.url() }))
+              .default([]),
+          }),
+        )
+        .default([]),
+    }),
+});
+
+export const collections = { projects, pages };

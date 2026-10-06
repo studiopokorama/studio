@@ -1,0 +1,20 @@
+---
+import { docPath, getDocPages } from "../docs";
+
+const pages = await getDocPages();
+---
+
+<div class="foot-copy">
+  <span>
+    © 2026 <span class="foot-name">Studio Pokorama</span>
+  </span>
+  {pages.length > 0 && (
+    <nav class="foot-docs" aria-label="Studio">
+      {pages.map((p) => (
+        <a href={docPath(p.id)} data-doc={p.id}>
+          {p.data.shortTitle ?? p.data.title}
+        </a>
+      ))}
+    </nav>
+  )}
+</div>

@@ -161,6 +161,25 @@ for (const px of [256, 512, 1024])
     scale: px / 112,
   });
 
+// Padded mark, for placements that crop the image (round avatars, social profiles): a full-bleed
+// square of the mark's background, with the tiles scaled down to the middle so a crop can't reach
+// them (even a circle: the tiles' corners stay well inside it).
+const PADDED_SCALE = 0.78;
+const MARK_BG = '<rect width="112" height="112" rx="24" fill="#1B1A1F"/>';
+if (!svgs.mark.includes(MARK_BG))
+  throw new Error("mark.svg: the background rect changed; update MARK_BG");
+const paddedMark = svgs.mark
+  .replace(
+    MARK_BG,
+    `<rect width="112" height="112" fill="${DEEP}"/>` +
+      `<g transform="translate(56 56) scale(${PADDED_SCALE}) translate(-56 -56)">`,
+  )
+  .replace(/<\/svg>\s*$/, "</g></svg>");
+await writeFile(path.join(out.svg, "mark-padded.svg"), paddedMark);
+await renderSvg(paddedMark, path.join(out.png, "mark-padded-1024.png"), {
+  scale: 1024 / 112,
+});
+
 // App icons: full-bleed square (platforms apply their own corner mask).
 const icon = (px, file) =>
   renderSvg(svgs.mark, file, { scale: px / 112, background: DEEP });

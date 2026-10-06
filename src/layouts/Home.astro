@@ -1,36 +1,36 @@
 ---
-import "@fontsource/bricolage-grotesque/800.css";
-import "@fontsource/figtree/400.css";
-import "@fontsource/figtree/600.css";
-import "@fontsource/jetbrains-mono/400.css";
-import "@fontsource/jetbrains-mono/600.css";
-import "../styles/tokens.css";
-import "../styles/global.css";
+// Head first: its base styles must come before this page's own.
+import Head from "../components/Head.astro";
 import "../styles/showcase.css";
+import "../styles/doc.css";
 import { getImage } from "astro:assets";
+import DocOverlay from "../components/DocOverlay.astro";
+import FootCopy from "../components/FootCopy.astro";
 import Launcher from "../components/Launcher.astro";
 import Mark from "../components/Mark.astro";
 import Palette from "../components/Palette.astro";
 import ProjectOverlay from "../components/ProjectOverlay.astro";
 import Showcase from "../components/Showcase.astro";
+import TopActions from "../components/TopActions.astro";
 import Wordmark from "../components/Wordmark.astro";
-import { CONTACT_EMAIL, GAME_URL, SITE_NAME } from "../config";
+import { getDocPages, type DocPage } from "../docs";
 import type { Project } from "../projects";
 
 interface Props {
   projects: Project[];
   /** A project page: the home page with this project open over it. */
   open?: Project;
+  /** A text page (privacy, terms, about): the home page with it open over it. */
+  doc?: DocPage;
 }
-const { projects, open } = Astro.props;
+const { projects, open, doc } = Astro.props;
+const docPages = await getDocPages();
 
-const site = SITE_NAME;
-const title = open ? `${open.data.title} | ${site}` : site;
 const description = open
   ? open.data.description
-  : "Studio Pokorama is an independent digital studio making apps, games, software and media.";
-if (!Astro.site) throw new Error("set `site` in astro.config.mjs");
-const url = new URL(Astro.url.pathname, Astro.site).href;
+  : doc
+    ? doc.data.description
+    : "Studio Pokorama is an independent digital studio making apps, games, software and media.";
 const cover = open
   ? await getImage({
       src: open.data.images[0]!.src,
@@ -38,45 +38,18 @@ const cover = open
       format: "jpg",
     })
   : null;
-const ogImage = new URL(cover?.src ?? "/og.png", Astro.site).href;
-const ogAlt = open
-  ? open.data.images[0]!.alt
-  : "The studio pokorama wordmark in letter tiles, with the second o lifted out of its slot.";
+const image =
+  open && cover ? { src: cover.src, alt: open.data.images[0]!.alt } : undefined;
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <link rel="canonical" href={url} />
-    <meta name="theme-color" content="#121115" />
-    <meta name="color-scheme" content="dark" />
-
-    <link rel="icon" href="/favicon.ico" sizes="32x32" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
-
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content={site} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={url} />
-    <meta property="og:image" content={ogImage} />
-    {!cover && (
-      <>
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-      </>
-    )}
-    <meta property="og:image:alt" content={ogAlt} />
-    <meta name="twitter:card" content="summary_large_image" />
-    <script is:inline>
-      document.documentElement.classList.add("js");
-    </script>
+    <Head
+      title={open?.data.title ?? doc?.data.title}
+      description={description}
+      image={image}
+    />
   </head>
   <body>
     <canvas class="board" data-board aria-hidden="true"></canvas>
@@ -84,18 +57,7 @@ const ogAlt = open
 
     <div class="page">
       <header class="top">
-        <nav class="top-actions" data-actions aria-label="Main">
-          <a
-            class="btn btn-secondary"
-            data-contact
-            href={`mailto:${CONTACT_EMAIL}`}
-          >
-            Contact us
-          </a>
-          <a class="btn btn-primary" data-cta href={GAME_URL}>
-            Play Interior Design Game
-          </a>
-        </nav>
+        <TopActions />
       </header>
 
       <main class="hero">
@@ -110,7 +72,7 @@ const ogAlt = open
       </main>
 
       <footer class="foot">
-        <span class="foot-copy">© 2026 Studio Pokorama</span>
+        <FootCopy />
         {projects.length > 0 && (
           <button
             type="button"
@@ -152,6 +114,7 @@ const ogAlt = open
         <Launcher projects={projects} />
       </>
     )}
+    {docPages.length > 0 && <DocOverlay pages={docPages} open={doc} />}
 
     <script>
       import "../scripts/main";
