@@ -16,7 +16,10 @@ const projects = defineCollection({
   schema: ({ image }) =>
     z.object({
       title: z.string(),
-      /** Optional shorter name for the home board's tiles, which are small. Everywhere else uses `title`. */
+      /**
+       * Optional shorter name for tight spots: the home board's small tiles and, on phones, the
+       * launcher and the project view's prev/next. Everywhere else uses `title`.
+       */
       shortTitle: z.string().optional(),
       /** One or two sentences: shown on the project view and used as its link-preview text. */
       description: z.string(),

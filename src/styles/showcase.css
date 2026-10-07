@@ -145,6 +145,18 @@ html:not(.js) .showcase .pt {
   font: 800 16px/1.1 var(--sp-font-display);
   letter-spacing: -0.02em;
 }
+/* A title with a short form (`shortTitle`): the short one on phones. */
+.t-short {
+  display: none;
+}
+@media (max-width: 720px) {
+  .t-long {
+    display: none;
+  }
+  .t-short {
+    display: inline;
+  }
+}
 .pt-year {
   position: absolute;
   z-index: 1;
@@ -325,6 +337,17 @@ html:not(.js) .apps-btn {
   .pt-year {
     top: 12px;
     right: 12px;
+  }
+}
+/* Phones: the sheet spans the window and the tiles wrap two to a row (fitGrid's size is unused). */
+@media (max-width: 720px) {
+  .launcher {
+    width: auto;
+    margin: 0 16px;
+    overflow-y: auto;
+  }
+  .launcher-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 /* `backwards`, not `both`: a fill that holds the end state would override the hover transition. */

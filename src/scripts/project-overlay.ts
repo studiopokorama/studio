@@ -4,6 +4,8 @@ import { fitGrid } from "./showcase-layout";
 interface ProjectRef {
   id: string;
   title: string;
+  /** Shown instead of the title on phones (prev/next). */
+  short?: string;
   path: string;
 }
 
@@ -279,6 +281,7 @@ export class ProjectOverlay {
       a.href = target.path;
       a.dataset.id = target.id;
       need(a, "[data-label]").textContent = target.title;
+      need(a, "[data-label-short]").textContent = target.short ?? target.title;
     };
     link("[data-prev]", this.projects[(i - 1 + n) % n]!);
     link("[data-next]", this.projects[(i + 1) % n]!);

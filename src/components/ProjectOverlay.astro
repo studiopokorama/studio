@@ -11,6 +11,7 @@ const { projects, open } = Astro.props;
 const index = projects.map((p) => ({
   id: p.id,
   title: p.data.title,
+  short: p.data.shortTitle,
   path: projectPath(p.id),
 }));
 ---
@@ -41,10 +42,12 @@ const index = projects.map((p) => ({
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
           <path d="M15 5l-7 7 7 7"></path>
         </svg>
-        <span data-label></span>
+        <span class="t-long" data-label></span>
+        <span class="t-short" data-label-short></span>
       </a>
       <a class="po-step po-step-next" data-next href="/">
-        <span data-label></span>
+        <span class="t-long" data-label></span>
+        <span class="t-short" data-label-short></span>
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
           <path d="M9 5l7 7-7 7"></path>
         </svg>

@@ -14,8 +14,11 @@ interface Props {
   showYear?: boolean;
   /** Show the tags under the title. */
   showTags?: boolean;
-  /** Use `shortTitle` when the project has one (the home board's small tiles). */
-  short?: boolean;
+  /**
+   * Use `shortTitle` when the project has one: always (the home board's small tiles), or only
+   * on phones ("narrow": the launcher).
+   */
+  short?: boolean | "narrow";
 }
 const {
   project: p,
@@ -26,7 +29,8 @@ const {
   showTags = false,
   short = false,
 } = Astro.props;
-const label = (short && p.data.shortTitle) || p.data.title;
+const label = (short === true && p.data.shortTitle) || p.data.title;
+const narrowLabel = short === "narrow" ? p.data.shortTitle : undefined;
 // At most three, as plain text: "iOS · Android · Unity".
 const tags = showTags ? p.data.tags.slice(0, 3).join(" · ") : "";
 ---
@@ -36,7 +40,7 @@ const tags = showTags ? p.data.tags.slice(0, 3).join(" · ") : "";
   href={projectPath(p.id)}
   data-project={p.id}
   style={`--i:${index}`}
-  aria-label={label !== p.data.title ? p.data.title : undefined}
+  aria-label={label !== p.data.title || narrowLabel ? p.data.title : undefined}
 >
   <span class="pt-card" data-card>
     <span class="pt-face" data-face>
@@ -53,7 +57,16 @@ const tags = showTags ? p.data.tags.slice(0, 3).join(" · ") : "";
       ))}
       {showYear && <span class="pt-year">{p.data.year}</span>}
       <span class="pt-label">
-        <span class="pt-title">{label}</span>
+        <span class="pt-title">
+          {narrowLabel ? (
+            <>
+              <span class="t-long">{label}</span>
+              <span class="t-short">{narrowLabel}</span>
+            </>
+          ) : (
+            label
+          )}
+        </span>
         {tags && <span class="pt-tags">{tags}</span>}
       </span>
     </span>
