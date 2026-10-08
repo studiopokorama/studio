@@ -224,14 +224,15 @@ await writeFile(
 
 // Share image (Open Graph / X), 1200×630.
 // Same slot board as the site background: 44px hatched slots on a 48px pitch.
-const BOARD_SVG = `<svg class="board" width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+const boardSvg = ({ w, h, scale = 1, x, y }) =>
+  `<svg class="board" width="${w}" height="${h}" viewBox="0 0 ${w / scale} ${h / scale}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="8" fill="#1C1B21"/></pattern>
-    <pattern id="slots" x="-10" y="-17" width="48" height="48" patternUnits="userSpaceOnUse">
+    <pattern id="slots" x="${x}" y="${y}" width="48" height="48" patternUnits="userSpaceOnUse">
       <rect x="2" y="2" width="44" height="44" rx="8" fill="url(#hatch)" stroke="#3A3842" stroke-opacity=".45"/>
     </pattern>
   </defs>
-  <rect width="1200" height="630" fill="url(#slots)"/>
+  <rect width="${w / scale}" height="${h / scale}" fill="url(#slots)"/>
 </svg>`;
 const fontFace = async (family, weight, file) =>
   `@font-face{font-family:"${family}";font-weight:${weight};src:url(data:font/woff;base64,${(await readFile(file)).toString("base64")}) format("woff")}`;
@@ -243,13 +244,37 @@ await page.setContent(`<html><head><style>
   .fade{background:radial-gradient(ellipse 75% 85% at 55% 45%, transparent 0%, ${BG} 78%)}
   .wm{position:absolute;left:72px;top:118px;width:${492 * 2}px}
   p{position:absolute;left:88px;top:430px;margin:0;font-size:38px;line-height:1.35;color:#B7B5BD}
-</style></head><body>${BOARD_SVG}<div class="fade"></div><img class="wm" src="${dataUri(svgs.wordmark)}"><p>${TAGLINE.join("<br>")}</p></body></html>`);
+</style></head><body>${boardSvg({ w: 1200, h: 630, x: -10, y: -17 })}<div class="fade"></div><img class="wm" src="${dataUri(svgs.wordmark)}"><p>${TAGLINE.join("<br>")}</p></body></html>`);
 await page.evaluate(async () => {
   await document.fonts.ready;
   await document.images[0].decode();
 });
 await page.screenshot({ path: path.join(out.social, "og.png"), type: "png" });
 await page.screenshot({ path: path.join(out.public, "og.png"), type: "png" });
+
+// YouTube channel banner, 2560×1440. YouTube crops it per device: only the centred 1546×423 strip
+// shows everywhere, so the wordmark sits inside it and the rest is board.
+const BANNER = { w: 2560, h: 1440, safe: { w: 1546, h: 423 }, scale: 2.5 };
+const bannerWm = { w: 492 * BANNER.scale, h: 132 * BANNER.scale };
+if (bannerWm.w > BANNER.safe.w || bannerWm.h > BANNER.safe.h)
+  throw new Error("banner: the wordmark doesn't fit the safe area");
+await page.setViewport({
+  width: BANNER.w,
+  height: BANNER.h,
+  deviceScaleFactor: 1,
+});
+// The board is scaled with the wordmark (2× in the share image) and offset to sit under it the same way.
+await page.setContent(`<html><head><style>
+  body{margin:0;width:${BANNER.w}px;height:${BANNER.h}px;overflow:hidden;background:${BG};position:relative}
+  .board,.fade{position:absolute;inset:0}
+  .fade{background:radial-gradient(ellipse 50% 50% at 50% 50%, transparent 0%, ${BG} 78%)}
+  .wm{position:absolute;left:${(BANNER.w - bannerWm.w) / 2}px;top:${(BANNER.h - bannerWm.h) / 2}px;width:${bannerWm.w}px}
+</style></head><body>${boardSvg({ w: BANNER.w, h: BANNER.h, scale: BANNER.scale / 2, x: 18, y: 21 })}<div class="fade"></div><img class="wm" src="${dataUri(svgs.wordmark)}"></body></html>`);
+await page.evaluate(() => document.images[0].decode());
+await page.screenshot({
+  path: path.join(out.social, "youtube-banner.png"),
+  type: "png",
+});
 
 await browser.close();
 console.log("brand: wrote brand/logo, brand/social and public icons");

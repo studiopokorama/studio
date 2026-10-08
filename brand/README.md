@@ -15,6 +15,7 @@ Logo files for press, social and partners. The text in every file is converted t
 | `logo/png/mark-transparent-{256,512,1024}.png`, `logo/svg/mark-transparent.svg` | Mark tiles only, in the same positions, with no background square             |
 | `logo/png/mark-square-{256,512,1024}.png`, `logo/svg/mark-square.svg`           | Mark tiles in the same positions on a full square (no rounded corners)        |
 | `social/og.png`                                                                 | 1200×630 link-preview image (also served as `/og.png`)                        |
+| `social/youtube-banner.png`                                                     | 2560×1440 YouTube channel banner, wordmark inside the 1546×423 safe area      |
 | `source/mark.svg`, `source/mark-56.svg`                                         | Mark sources (live text); edit these, then regenerate                         |
 | `design_handoff_studio_pokorama_brand_9b/`                                      | Original brand handoff: rules, tokens, source SVGs (live text)                |
 
