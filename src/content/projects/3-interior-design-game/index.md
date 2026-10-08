@@ -15,7 +15,7 @@ images:
     alt: Kitchen
   - src: ./steam_material_library.png
     alt: Library of Materials
-youtube: [WIMdJ8Vjmqo]
+youtube: [4HTf1PKzyPE]
 links:
   - label: View on Steam
     href: https://go.pokorama.com/steam
