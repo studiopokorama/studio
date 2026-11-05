@@ -21,7 +21,7 @@ export class AbortedError extends Error {
 
 export const isAborted = (e: unknown) => e instanceof AbortedError;
 
-/** The studio's lime cursor: a second pair of hands on the page. */
+/** The studio's yellow cursor: a second pair of hands on the page. */
 export class BotCursor {
   pos: Pt = { x: -100, y: -100 };
   private pin: (() => Pt) | null = null;

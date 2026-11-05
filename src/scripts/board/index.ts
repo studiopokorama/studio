@@ -18,11 +18,11 @@ export interface BoardOptions {
 }
 
 const COLORS = {
-  u_bg: "#121115",
-  u_line: "#3A3842",
-  u_stripe: "#1C1B21",
-  u_hover: "#5A5766",
-  u_violet: "#9B7BF5",
+  u_bg: "#131110",
+  u_line: "#3B3835",
+  u_stripe: "#1D1B1A",
+  u_hover: "#5A5652",
+  u_orange: "#F2643A",
 } as const;
 
 // Smoothing rates (1/s) and settle thresholds.

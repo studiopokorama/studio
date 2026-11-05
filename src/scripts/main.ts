@@ -234,7 +234,7 @@ async function init() {
 
   const resetBtn = need<HTMLButtonElement>("[data-reset]");
   const startCaption = caption.textContent?.trim() ?? "";
-  /** Back to the beginning: no words found, empty board, the violet tile lifted out again. */
+  /** Back to the beginning: no words found, empty board, the orange tile lifted out again. */
   function reset() {
     found.clear();
     foundBoard.reset();

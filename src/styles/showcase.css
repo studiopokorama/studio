@@ -100,7 +100,7 @@ html:not(.js) .showcase .pt {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgb(18 17 21 / 0.28);
+  background: rgb(19 17 16 / 0.28);
   transition: opacity 240ms var(--sp-ease-out);
 }
 .pt:hover .pt-face::after,
@@ -133,7 +133,7 @@ html:not(.js) .showcase .pt {
   padding: 6px 10px 7px;
   border-radius: var(--sp-radius-sm);
   /* Solid, no backdrop blur: inside the tilting face it would be re-blurred every frame. */
-  background: rgb(18 17 21 / 0.85);
+  background: rgb(19 17 16 / 0.85);
 }
 /* Up to two lines, then an ellipsis. */
 .pt-title {
@@ -164,7 +164,7 @@ html:not(.js) .showcase .pt {
   right: 8px;
   padding: 5px 7px;
   border-radius: 6px;
-  background: rgb(18 17 21 / 0.85);
+  background: rgb(19 17 16 / 0.85);
   color: var(--sp-text-muted);
   font: 400 11px/1 var(--sp-font-mono);
   letter-spacing: 0.04em;
@@ -248,7 +248,7 @@ html:not(.js) .apps-btn {
   animation: launcher-out 180ms var(--sp-ease-out) forwards;
 }
 .launcher::backdrop {
-  background: rgb(18 17 21 / 0.6);
+  background: rgb(19 17 16 / 0.6);
 }
 @keyframes launcher-in {
   from {
@@ -296,7 +296,7 @@ html:not(.js) .apps-btn {
 }
 .launcher-close:hover,
 .po-close:hover {
-  background: #322f39;
+  background: #33302d;
   transform: rotate(-4deg);
 }
 .launcher-close path,
@@ -379,7 +379,7 @@ html:not(.js) .apps-btn {
 }
 /* No backdrop blur: over the WebGL board it costs whole frames, right when the cover flies in. */
 .po::backdrop {
-  background: rgb(18 17 21 / 0.97);
+  background: rgb(19 17 16 / 0.97);
   transition: opacity 260ms var(--sp-ease-out);
 }
 .po[open]::backdrop {
@@ -519,7 +519,7 @@ html:not(.js) .pv-thumbs {
   width: 120px;
   margin-top: -38px;
   /* Barely off the stage background: a hint, not a control. */
-  color: #2a2830;
+  color: #2b2826;
   transition: color 160ms var(--sp-ease-out);
 }
 .pv-hint-prev {
@@ -613,7 +613,7 @@ html:not(.js) .pv-thumbs {
   height: 72px;
   margin: -36px 0 0 -36px;
   border-radius: 16px;
-  background: var(--sp-lime);
+  background: var(--sp-yellow);
   fill: var(--sp-on-accent);
   box-shadow: 0 10px 24px rgb(0 0 0 / 0.5);
   transition: transform 200ms var(--sp-ease-back);
@@ -661,7 +661,7 @@ html:not(.js) .pv-thumbs {
 }
 .pv-thumb[aria-pressed="true"] {
   opacity: 1;
-  box-shadow: 0 0 0 2px var(--sp-violet);
+  box-shadow: 0 0 0 2px var(--sp-orange);
 }
 /* Auto-advance, as on a Steam store page: a bar fills under the active thumb, then the next
    item shows (the script listens for the end of this animation). */
@@ -672,7 +672,7 @@ html:not(.js) .pv-thumbs {
   right: 0;
   bottom: 0;
   height: 3px;
-  background: var(--sp-violet);
+  background: var(--sp-orange);
   transform: scaleX(0);
   transform-origin: 0 50%;
 }
@@ -727,7 +727,7 @@ html:not(.js) .pv-thumbs {
 .pv-year {
   margin-right: 6px;
   font: 800 17px/1 var(--sp-font-display);
-  color: var(--sp-violet);
+  color: var(--sp-orange);
 }
 .pv-tag {
   padding: 6px 10px 7px;
@@ -751,7 +751,7 @@ html:not(.js) .pv-thumbs {
   margin-top: 0;
 }
 .pv-body a {
-  color: var(--sp-violet);
+  color: var(--sp-orange);
 }
 .pv-links {
   display: flex;

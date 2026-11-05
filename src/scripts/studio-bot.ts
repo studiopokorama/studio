@@ -105,7 +105,7 @@ export class StudioBot {
   }
 
   /**
-   * Every word found: put the word together, drop the violet tile into its slot so the logo is
+   * Every word found: put the word together, drop the orange tile into its slot so the logo is
    * whole for a moment (`celebrate` runs then), and lift it back out. Always a work in progress.
    */
   /** True while the bot idly adjusts its grip on the resting tile: nothing worth a sound. */
@@ -120,7 +120,7 @@ export class StudioBot {
 
   /**
    * Every word found. `leadIn` runs first (the replay), then the bot puts the word together and
-   * drops the violet tile into its slot so the logo is whole (`celebrate` runs then), and from then
+   * drops the orange tile into its slot so the logo is whole (`celebrate` runs then), and from then
    * on admires it until reset. Scramble and tidy are refused from the moment this is called.
    */
   finale(leadIn: () => Promise<void>, celebrate: () => Promise<void>) {
@@ -163,7 +163,7 @@ export class StudioBot {
     });
   }
 
-  /** Back to the beginning: lift the violet tile out again and carry on as usual. */
+  /** Back to the beginning: lift the orange tile out again and carry on as usual. */
   reset() {
     this.completed = false;
     this.cursor.setIdleLabel();
@@ -386,7 +386,7 @@ export class StudioBot {
     return this.clampToView({ x: last.x + 0.9 * t, y: last.y - 1.3 * t });
   }
 
-  /** Idle visitor: bring them the violet tile. */
+  /** Idle visitor: bring them the orange tile. */
   private offer() {
     const p = this.pointer;
     const id = this.wm.floatingId();

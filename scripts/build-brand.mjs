@@ -25,8 +25,8 @@ const CHROME =
   process.env.CHROME_PATH ??
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-const BG = "#121115";
-const DEEP = "#1B1A1F";
+const BG = "#131110";
+const DEEP = "#1C1A19";
 const TAGLINE = ["Apps, games and media.", "Building piece by piece."];
 
 // ─── SVG: text → outlines ─────────────────────────────────────
@@ -165,7 +165,7 @@ for (const px of [256, 512, 1024])
 // square of the mark's background, with the tiles scaled down to the middle so a crop can't reach
 // them (even a circle: the tiles' corners stay well inside it).
 const PADDED_SCALE = 0.78;
-const MARK_BG = '<rect width="112" height="112" rx="24" fill="#1B1A1F"/>';
+const MARK_BG = '<rect width="112" height="112" rx="24" fill="#1C1A19"/>';
 if (!svgs.mark.includes(MARK_BG))
   throw new Error("mark.svg: the background rect changed; update MARK_BG");
 const paddedMark = svgs.mark
@@ -227,9 +227,9 @@ await writeFile(
 const boardSvg = ({ w, h, scale = 1, x, y }) =>
   `<svg class="board" width="${w}" height="${h}" viewBox="0 0 ${w / scale} ${h / scale}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="8" fill="#1C1B21"/></pattern>
+    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="2" height="8" fill="#1D1B1A"/></pattern>
     <pattern id="slots" x="${x}" y="${y}" width="48" height="48" patternUnits="userSpaceOnUse">
-      <rect x="2" y="2" width="44" height="44" rx="8" fill="url(#hatch)" stroke="#3A3842" stroke-opacity=".45"/>
+      <rect x="2" y="2" width="44" height="44" rx="8" fill="url(#hatch)" stroke="#3B3835" stroke-opacity=".45"/>
     </pattern>
   </defs>
   <rect width="${w / scale}" height="${h / scale}" fill="url(#slots)"/>
@@ -243,7 +243,7 @@ await page.setContent(`<html><head><style>
   .board,.fade{position:absolute;inset:0}
   .fade{background:radial-gradient(ellipse 75% 85% at 55% 45%, transparent 0%, ${BG} 78%)}
   .wm{position:absolute;left:72px;top:118px;width:${492 * 2}px}
-  p{position:absolute;left:88px;top:430px;margin:0;font-size:38px;line-height:1.35;color:#B7B5BD}
+  p{position:absolute;left:88px;top:430px;margin:0;font-size:38px;line-height:1.35;color:#B9B5AF}
 </style></head><body>${boardSvg({ w: 1200, h: 630, x: -10, y: -17 })}<div class="fade"></div><img class="wm" src="${dataUri(svgs.wordmark)}"><p>${TAGLINE.join("<br>")}</p></body></html>`);
 await page.evaluate(async () => {
   await document.fonts.ready;

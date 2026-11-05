@@ -85,7 +85,7 @@
   color: var(--sp-text);
 }
 .prose a {
-  color: var(--sp-violet);
+  color: var(--sp-orange);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
@@ -101,11 +101,11 @@
   margin-top: 0.35em;
 }
 .prose li::marker {
-  color: var(--sp-violet);
+  color: var(--sp-orange);
 }
 .prose blockquote {
   padding: 2px 0 2px 18px;
-  border-left: 3px solid var(--sp-violet);
+  border-left: 3px solid var(--sp-orange);
   color: var(--sp-text);
 }
 .prose code {
@@ -217,7 +217,7 @@
   font: 600 13px/1.4 var(--sp-font-body);
 }
 .member-links a {
-  color: var(--sp-violet);
+  color: var(--sp-orange);
   text-decoration: none;
 }
 .member-links a:hover {

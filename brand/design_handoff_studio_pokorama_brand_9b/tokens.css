@@ -1,16 +1,16 @@
 :root {
   /* Color: dark only */
-  --sp-bg: #121115;
-  --sp-surface: #2A2830;      /* tiles, cards */
-  --sp-surface-deep: #1B1A1F; /* mark container, recessed */
-  --sp-slot-stripe: #1C1B21;  /* empty-slot hatching */
-  --sp-line: #3A3842;         /* slot outline, hairlines */
+  --sp-bg: #131110;
+  --sp-surface: #2B2826;      /* tiles, cards */
+  --sp-surface-deep: #1C1A19; /* mark container, recessed */
+  --sp-slot-stripe: #1D1B1A;  /* empty-slot hatching */
+  --sp-line: #3B3835;         /* slot outline, hairlines */
   --sp-text: #EDEBE6;
-  --sp-text-muted: #B7B5BD;
-  --sp-text-faint: #9A98A0;   /* "studio", labels */
-  --sp-lime: #B8E04A;         /* cursor, primary CTA */
-  --sp-violet: #9B7BF5;       /* the dragged piece */
-  --sp-on-accent: #121115;
+  --sp-text-muted: #B9B5AF;
+  --sp-text-faint: #9C9892;   /* "studio", labels */
+  --sp-yellow: #FFD166;         /* cursor, primary CTA */
+  --sp-orange: #F2643A;       /* the dragged piece */
+  --sp-on-accent: #131110;
 
   /* Type */
   --sp-font-display: "Bricolage Grotesque", sans-serif; /* 800 */

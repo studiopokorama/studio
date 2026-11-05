@@ -33,7 +33,7 @@ const projects = defineCollection({
       youtube: z.array(z.string().regex(/^[\w-]{11}$/)).default([]),
       /**
        * Up to two buttons under the description on the project view: the first looks like the
-       * home page's main button (lime), the second like "Contact us" (violet outline).
+       * home page's main button (yellow), the second like "Contact us" (orange outline).
        */
       links: z
         .array(z.object({ label: z.string(), href: z.url() }))

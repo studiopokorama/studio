@@ -25,12 +25,12 @@ html:has(dialog:modal) {
 }
 
 ::selection {
-  background: var(--sp-violet);
+  background: var(--sp-orange);
   color: var(--sp-on-accent);
 }
 
 :focus-visible {
-  outline: 2px solid var(--sp-lime);
+  outline: 2px solid var(--sp-yellow);
   outline-offset: 3px;
 }
 
@@ -87,8 +87,8 @@ html:has(dialog:modal) {
   place-items: center;
   padding-bottom: 2px;
   border-radius: 8px;
-  background: rgb(42 40 48 / 0.45);
-  color: #55525e;
+  background: rgb(43 40 38 / 0.45);
+  color: #57534f;
   font: 800 24px/1 var(--sp-font-display);
   letter-spacing: -0.03em;
   transition:
@@ -97,9 +97,9 @@ html:has(dialog:modal) {
     box-shadow 1200ms var(--sp-ease-out);
 }
 .fw-tile.is-new {
-  background: color-mix(in srgb, var(--sp-violet) 24%, rgb(42 40 48 / 0.8));
-  color: #c9bbf9;
-  box-shadow: inset 0 0 0 1.5px rgb(155 123 245 / 0.75);
+  background: color-mix(in srgb, var(--sp-orange) 24%, rgb(43 40 38 / 0.8));
+  color: #ffc4ae;
+  box-shadow: inset 0 0 0 1.5px rgb(242 100 58 / 0.75);
   transition-duration: 200ms;
 }
 .fw-tile.is-dropping {
@@ -120,9 +120,9 @@ html:has(dialog:modal) {
   background:
     radial-gradient(ellipse at 50% 45%, transparent 30%, var(--sp-bg) 80%),
     /* Lines on slot boundaries: a slot is centered on the viewport, as in the WebGL board. */
-    linear-gradient(90deg, rgb(58 56 66 / 0.18) 1px, transparent 1px) 50% 50% /
+    linear-gradient(90deg, rgb(59 56 53 / 0.18) 1px, transparent 1px) 50% 50% /
       48px 48px,
-    linear-gradient(rgb(58 56 66 / 0.18) 1px, transparent 1px) 50% 50% / 48px
+    linear-gradient(rgb(59 56 53 / 0.18) 1px, transparent 1px) 50% 50% / 48px
       48px,
     var(--sp-bg);
 }
@@ -160,7 +160,7 @@ html:has(dialog:modal) {
     background-color 180ms var(--sp-ease-out);
 }
 .btn-primary {
-  background: var(--sp-lime);
+  background: var(--sp-yellow);
   color: var(--sp-on-accent);
 }
 .top-actions {
@@ -174,15 +174,15 @@ html:has(dialog:modal) {
   box-shadow: 0 10px 18px rgb(0 0 0 / 0.4);
 }
 
-/* Secondary (per the brand): violet outline and text. The fill tints on hover so it reads as clickable. */
+/* Secondary (per the brand): orange outline and text. The fill tints on hover so it reads as clickable. */
 .btn-secondary {
-  color: var(--sp-violet);
-  box-shadow: inset 0 0 0 1.5px var(--sp-violet);
+  color: var(--sp-orange);
+  box-shadow: inset 0 0 0 1.5px var(--sp-orange);
 }
 .btn-secondary:hover {
-  background: rgb(155 123 245 / 0.12);
+  background: rgb(242 100 58 / 0.12);
   box-shadow:
-    inset 0 0 0 1.5px var(--sp-violet),
+    inset 0 0 0 1.5px var(--sp-orange),
     0 10px 18px rgb(0 0 0 / 0.4);
 }
 
@@ -261,7 +261,7 @@ html:has(dialog:modal) {
     opacity 140ms linear;
 }
 .tile:hover:not(.is-lifted) {
-  background: #322f39;
+  background: #33302d;
 }
 .wm-row.is-locked .tile {
   cursor: default;
@@ -281,15 +281,15 @@ html:has(dialog:modal) {
 html:not(.js) .tile[data-rest],
 .tile.is-lifted {
   z-index: 3;
-  background: var(--sp-violet);
+  background: var(--sp-orange);
   color: var(--sp-on-accent);
   box-shadow: 0 calc(var(--t) * 14 / 56) calc(var(--t) * 24 / 56)
     rgb(0 0 0 / 0.55);
 }
-/* Part of a found word: a violet-tinted highlight that fades back out. */
+/* Part of a found word: an orange-tinted highlight that fades back out. */
 .tile.is-found:not(.is-lifted) {
-  background: color-mix(in srgb, var(--sp-violet) 38%, var(--sp-surface));
-  box-shadow: inset 0 0 0 2px var(--sp-violet);
+  background: color-mix(in srgb, var(--sp-orange) 38%, var(--sp-surface));
+  box-shadow: inset 0 0 0 2px var(--sp-orange);
 }
 .tile.is-held {
   z-index: 4;
@@ -421,7 +421,7 @@ html:not(.js) .tile[data-rest],
   background: var(--sp-surface-deep);
 }
 .foot-btn[aria-pressed="true"] {
-  color: var(--sp-lime);
+  color: var(--sp-yellow);
 }
 kbd {
   display: inline-grid;
@@ -455,7 +455,7 @@ kbd {
   /* The arrow's tip sits exactly on the element's origin. */
   left: -8px;
   top: 0;
-  fill: var(--sp-lime);
+  fill: var(--sp-yellow);
   transform-origin: 8px 0;
   transform: scale(var(--cursor-scale)) rotate(-30deg);
   filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.5));
@@ -476,7 +476,7 @@ kbd {
   top: calc(20px * var(--cursor-scale));
   padding: 3px 8px;
   border-radius: var(--sp-radius-pill);
-  background: var(--sp-lime);
+  background: var(--sp-yellow);
   color: var(--sp-on-accent);
   font: 600 11px/1.3 var(--sp-font-mono);
   letter-spacing: 0.02em;
@@ -516,7 +516,7 @@ kbd {
   flex-direction: column;
 }
 .palette::backdrop {
-  background: rgb(18 17 21 / 0.6);
+  background: rgb(19 17 16 / 0.6);
   backdrop-filter: blur(3px);
 }
 .palette-log {
@@ -532,7 +532,7 @@ kbd {
   color: var(--sp-text-faint);
 }
 .palette-log .error {
-  color: var(--sp-violet);
+  color: var(--sp-orange);
 }
 .palette-prompt {
   display: flex;
@@ -543,7 +543,7 @@ kbd {
   border-radius: var(--sp-radius-md);
   background: var(--sp-bg);
   box-shadow: inset 0 0 0 1px var(--sp-line);
-  color: var(--sp-lime);
+  color: var(--sp-yellow);
 }
 .palette-prompt input {
   flex: 1;
@@ -554,7 +554,7 @@ kbd {
   color: var(--sp-text);
   font: inherit;
   font-size: 15px;
-  caret-color: var(--sp-lime);
+  caret-color: var(--sp-yellow);
 }
 .palette-list {
   margin: 0;
@@ -577,7 +577,7 @@ kbd {
   color: var(--sp-text);
 }
 .palette-list li[aria-selected="true"] .cmd {
-  color: var(--sp-lime);
+  color: var(--sp-yellow);
 }
 .palette-list .hint {
   color: var(--sp-text-faint);

@@ -34,7 +34,7 @@ uniform vec3 u_bg;
 uniform vec3 u_line;
 uniform vec3 u_stripe;
 uniform vec3 u_hover;
-uniform vec3 u_violet;
+uniform vec3 u_orange;
 
 const float PITCH = ${BOARD_PITCH.toFixed(1)};
 const float HALF_SLOT = ${(BOARD_SLOT / 2).toFixed(1)};
@@ -102,21 +102,21 @@ void main() {
   float lit = smoothstep(key - 0.02, key + 0.02, u_progress * 1.05);
 
   float ringA = min(ring, 1.0);
-  vec3 hi = mix(u_hover, u_violet, u_drag);
+  vec3 hi = mix(u_hover, u_orange, u_drag);
   vec3 lineCol = mix(u_line, hi, clamp(prox + ringA * 0.6, 0.0, 1.0));
   float lineA = clamp(0.35 * vig + prox * 0.6 + ringA * 0.6 * (0.5 + 0.5 * vig), 0.0, 1.0);
   col = mix(col, lineCol, outline * lineA);
-  // Lit slots: a violet outline over the neutral one. Kept dim so the hero stays readable.
+  // Lit slots: an orange outline over the neutral one. Kept dim so the hero stays readable.
   float litA = lit * (0.06 + 0.3 * vig);
-  col = mix(col, mix(u_line, u_violet, 0.85), outline * litA * (1.0 - prox * 0.5));
+  col = mix(col, mix(u_line, u_orange, 0.85), outline * litA * (1.0 - prox * 0.5));
 
-  // Finale: a violet wave runs diagonally from the top-left, lighting outlines and tinting slots.
+  // Finale: an orange wave runs diagonally from the top-left, lighting outlines and tinting slots.
   if (u_flash >= 0.0) {
     float front = u_flash * 1.3 - 0.1;
     float x = (dn - front) / 0.07;
     float wave = exp(-x * x) * (1.0 - u_flash * 0.5);
-    col = mix(col, u_violet, inside * wave * 0.1);
-    col = mix(col, u_violet, outline * wave * 0.85);
+    col = mix(col, u_orange, inside * wave * 0.1);
+    col = mix(col, u_orange, outline * wave * 0.85);
   }
 
   gl_FragColor = vec4(col, 1.0);
