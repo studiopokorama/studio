@@ -21,7 +21,7 @@ images:
     alt: Outfit shop
   - src: ./leaderboard.png
     alt: Daily Challenge world ranking
-youtube: []
+youtube: [DdciVmPgQ58]
 links:
   - label: Get it on Google Play
     href: https://play.google.com/store/apps/details?id=io.mogurado.game

@@ -64,7 +64,7 @@ const media: Media[] = [
           <figure class="pv-item pv-video" data-item data-youtube={m.id} hidden>
             <button type="button" class="pv-play" data-play>
               <img
-                src={`https://i.ytimg.com/vi/${m.id}/hqdefault.jpg`}
+                src={`https://i.ytimg.com/vi/${m.id}/${portrait ? "maxresdefault" : "hqdefault"}.jpg`}
                 alt=""
                 loading="lazy"
               />

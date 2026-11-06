@@ -29,7 +29,7 @@ const projects = defineCollection({
       images: z.array(z.object({ src: image(), alt: z.string() })).min(1),
       /** Portrait images (e.g. phone screenshots): a tall main image, thumbnails in a column beside it. */
       portrait: z.boolean().default(false),
-      /** YouTube video IDs (the 11 characters after watch?v=). */
+      /** YouTube video IDs (the 11 characters after watch?v= or shorts/). With `portrait`, videos fill the tall frame: use Shorts. */
       youtube: z.array(z.string().regex(/^[\w-]{11}$/)).default([]),
       /**
        * Up to two buttons under the description on the project view: the first looks like the

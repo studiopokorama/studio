@@ -824,6 +824,18 @@ html:not(.js) .pv-thumbs {
 .pv.is-portrait .pv-video {
   background: none;
 }
+/* Vertical videos (Shorts) fill the phone-shaped stage. The poster is YouTube's 16:9 thumbnail,
+   which letterboxes a Short in its middle: cropping it to the stage shows just the video. */
+.pv.is-portrait .pv-video:not([hidden]) {
+  place-items: stretch;
+}
+.pv.is-portrait .pv-play,
+.pv.is-portrait .pv-video iframe {
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: var(--sp-radius-lg);
+  overflow: hidden;
+}
 .pv.is-portrait .pv-thumbs {
   flex-direction: column;
   width: 60px;
